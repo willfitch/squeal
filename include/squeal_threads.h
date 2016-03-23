@@ -1,0 +1,6 @@
+#ifndef HAVE_SQUEAL_THREADS_H
+#define HAVE_SQUEAL_THREADS_H
+
+
+
+#endif
