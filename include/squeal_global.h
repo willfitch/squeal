@@ -10,9 +10,11 @@
 #include <sys/types.h>
 #include <squeal_types.h>
 #include <squeal_string.h>
+#include <squeal_config.h>
 
-squeal_server_info_t *squeal_server_info_init(char *addr, uint16_t port);
-void squeal_server_info_free(squeal_server_info_t *server_info);
+/* server info functionality */
+squeal_server_info *squeal_server_info_init(char *addr, uint16_t port);
+void squeal_server_info_free(squeal_server_info *server_info);
 
 
 
