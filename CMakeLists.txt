@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.4)
 project(squeal)
 
+set(PTHREAD_PATH "/usr/")
+
 include_directories(include)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
@@ -8,6 +10,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
 set(SOURCE_FILES
         src/squeal.c
         src/squeal_string.c
+        src/squeal_threads.c
         src/squeald.c
         src/squeald.h)
 
