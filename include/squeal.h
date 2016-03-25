@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <limits.h>
 #include <string.h>
 #include <signal.h>
@@ -11,6 +10,7 @@
 #include <squeal_types.h>
 #include <squeal_string.h>
 #include <squeal_config.h>
+#include <squeal_hashtable.h>
 
 /* server info functionality */
 squeal_server_info *squeal_server_info_init(char *addr, uint16_t port);

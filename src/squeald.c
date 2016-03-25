@@ -1,22 +1,22 @@
-#include <squeal_global.h>
+#include <squeal.h>
 #include "squeald.h"
 #include <squeal_threads.h>
 #include <time.h>
 #include <unistd.h>
 
 void task1() {
-    fprintf(stdout, "Task1 executed\n");
+    printf("Task1 executed\n");
 }
 
 
 void task2() {
-    fprintf(stdout, "Task2 executed\n");
+    printf("Task2 executed\n");
 }
 
 int main()
 {
     printf("Good to go\n");
-    squeal_thread_pool *pool = squeal_tp_init(2);
+    squeal_thread_pool *pool = squeal_tp_init(6);
 
     printf("Adding 40 tasks\n");
 

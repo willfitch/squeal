@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <time.h>
 #include <assert.h>
-#include <squeal_global.h>
+#include <squeal.h>
 #include <squeal_threads.h>
 
 static void         *start_routine(squeal_thread *thread);

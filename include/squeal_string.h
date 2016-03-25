@@ -1,6 +1,13 @@
 #ifndef HAVE_SQUEAL_STRING_H
 #define HAVE_SQUEAL_STRING_H
 
+struct _squeal_string {
+    size_t len;
+
+    /* must be the last element! */
+    char val[1];
+};
+
 squeal_string *squeal_string_init(const char *val, size_t len);
 squeal_string *squeal_string_alloc(size_t len);
 squeal_string *squeal_string_dup(squeal_string *s);

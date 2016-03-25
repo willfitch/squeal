@@ -1,4 +1,4 @@
-#include <squeal_global.h>
+#include <squeal.h>
 #include <netinet/in.h>
 #include <event2/event.h>
 #include <event2/listener.h>

@@ -3,6 +3,6 @@
 
 typedef struct {
     squeal_server_info *server_info;
-} squeald_t;
+} squeald;
 
 #endif
