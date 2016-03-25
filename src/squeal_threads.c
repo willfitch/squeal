@@ -36,6 +36,7 @@ squeal_thread_pool *squeal_tp_init(unsigned int total_threads)
 
     tp->paused = 0;
     tp->keep_threads_alive = 1;
+    tp->total_threads = total_threads;
 
     if (squeal_job_queue_init(tp) == -1) {
         free(tp);
@@ -320,15 +321,3 @@ static void squeal_sem_wait(squeal_sem *sem)
     sem->val = 0;
     pthread_mutex_unlock(&sem->mutex);
 }
-
-
-
-
-
-
-
-
-
-
-
-
