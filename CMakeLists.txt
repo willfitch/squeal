@@ -10,6 +10,7 @@ set(SOURCE_FILES
         src/squeal_string.c
         src/squeal_threads.c
         src/squeald.c
+        src/squeal_hashtable.c
         src/squeald.h)
 
 add_executable(squeald ${SOURCE_FILES})

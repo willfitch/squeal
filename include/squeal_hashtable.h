@@ -12,7 +12,7 @@
     squeal_ht_record *record; \
     uint32_t total_records = ht->ma.mask + 1; \
     ht->pos = 0; \
-    for (ht->pos; ht->pos < total_records; ht->pos++) { \
+    for (; ht->pos < total_records; ht->pos++) { \
         if (!ht->rec[ht->pos]->is_used) {\
             continue; \
         } \
@@ -33,17 +33,18 @@
     entry = *record->v.ptr;
 
 #define SQUEAL_HASH_ITERATE_END() \
-    }
+    } \
+    ht->pos = 0;
 
 typedef struct _squeal_hashtable_record squeal_ht_record;
 
 struct _squeal_hashtable_record {
     uint32_t        hash;
     squeal_string   *key;
-    uint32_t        *type;
+    uint32_t        type;
     int             is_used;
 
-    union {
+    struct {
         squeal_val  *sval;
         void        **ptr; /* used for random pointers */
     } v;
@@ -70,20 +71,20 @@ struct _squeal_hashtable_record {
  */
 struct _squeal_hashtable {
     uint32_t            pos;
-    uint32_t            seed;
+    long                seed;
 
-    union {
+    struct {
         uint32_t        used;
         uint32_t        filled;
-        unsigned long   mask;
+        long            mask;
     } ma;
 
     squeal_ht_record    *rec[1];
 };
 
-int squeal_ht_init(hashtable *ht);
+hashtable *squeal_ht_init();
 int squeal_ht_add_sval(hashtable *ht, squeal_string *key, squeal_val *val);
-int squeal_ht_add_ptr(hashtable *ht, squeal_string *key, void *(*ptr));
+int squeal_ht_add_ptr(hashtable *ht, squeal_string *key, void *ptr);
 void squeal_ht_free(hashtable *ht);
 squeal_val *squeal_ht_find_sval(hashtable *ht, squeal_string *str);
 squeal_val *squeal_ht_find_ptr(hashtable *ht, squeal_string *str);
