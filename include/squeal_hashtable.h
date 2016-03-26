@@ -46,7 +46,7 @@ struct _squeal_hashtable_record {
 
     struct {
         squeal_val  *sval;
-        void        **ptr; /* used for random pointers */
+        void        *ptr; /* used for random pointers */
     } v;
 };
 
@@ -87,7 +87,7 @@ int squeal_ht_add_sval(hashtable *ht, squeal_string *key, squeal_val *val);
 int squeal_ht_add_ptr(hashtable *ht, squeal_string *key, void *ptr);
 void squeal_ht_free(hashtable *ht);
 squeal_val *squeal_ht_find_sval(hashtable *ht, squeal_string *str);
-squeal_val *squeal_ht_find_ptr(hashtable *ht, squeal_string *str);
+void *squeal_ht_find_ptr(hashtable *ht, squeal_string *str);
 squeal_ht_record *squeal_ht_find(hashtable *ht, squeal_string *key);
 
 #endif

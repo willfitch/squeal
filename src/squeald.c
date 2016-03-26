@@ -29,6 +29,7 @@ int main()
     hashtable *ht = squeal_ht_init();
     squeal_val *blah = SVAL_INIT();
     blah->val.v.dval = 55.5;
+
     squeal_val *val;
     squeal_string *key = squeal_string_init("test", strlen("test"));
     squeal_ht_add_sval(ht, key, blah);

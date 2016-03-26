@@ -87,7 +87,7 @@ int squeal_ht_add_ptr(hashtable *ht, squeal_string *key, void *ptr)
     ht->rec[slot]->hash = hash;
     ht->rec[slot]->key = key;
     ht->rec[slot]->type = HASHTABLE_TYPE_PTR;
-    ht->rec[slot]->v.ptr = &ptr;
+    ht->rec[slot]->v.ptr = ptr;
 
     return 1;
 }
@@ -105,18 +105,17 @@ squeal_val *squeal_ht_find_sval(hashtable *ht, squeal_string *key)
     return record->v.sval;
 }
 
-squeal_val *squeal_ht_find_ptr(hashtable *ht, squeal_string *str)
+void *squeal_ht_find_ptr(hashtable *ht, squeal_string *str)
 {
     squeal_ht_record *record = squeal_ht_find(ht, str);
 
     if (record == NULL
         || record->type != HASHTABLE_TYPE_PTR
-        || !record->v.ptr
-        || !*record->v.ptr) {
+        || !record->v.ptr) {
         return NULL;
     }
 
-    return *record->v.ptr;
+    return record->v.ptr;
 }
 
 void squeal_ht_free(hashtable *ht)

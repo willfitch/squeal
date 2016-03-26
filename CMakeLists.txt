@@ -1,16 +1,24 @@
 cmake_minimum_required(VERSION 3.4)
 project(squeal)
+enable_testing()
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
+
+find_package(Threads REQUIRED)
 
 include_directories(include src/sql)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
 
-set(SOURCE_FILES
-        src/squeal.c
-        src/squeal_string.c
-        src/squeal_threads.c
-        src/squeald.c
-        src/squeal_hashtable.c
-        src/squeald.h)
+set(SQUEAL_SOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/src/squeal.c
+        ${CMAKE_SOURCE_DIR}/src/squeal_string.c
+        ${CMAKE_SOURCE_DIR}/src/squeal_threads.c
+        ${CMAKE_SOURCE_DIR}/src/squeal_hashtable.c
+        ${CMAKE_SOURCE_DIR}/src/squeald.h)
 
-add_executable(squeald ${SOURCE_FILES})
+set(SQUEALD_SOURCE_FILES ${SQUEAL_SOURCE_FILES} src/squeald.c)
+set_property(GLOBAL PROPERTY G_SQUEAL_SOURCE_FILES ${SQUEAL_SOURCE_FILES})
+add_subdirectory(tests)
+
+add_executable(squeald ${SQUEALD_SOURCE_FILES})
