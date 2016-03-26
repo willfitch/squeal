@@ -76,7 +76,7 @@ struct _squeal_hashtable {
     struct {
         uint32_t        used;
         uint32_t        filled;
-        long            mask;
+        uint32_t        mask;
     } ma;
 
     squeal_ht_record    *rec[1];

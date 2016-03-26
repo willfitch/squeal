@@ -39,9 +39,8 @@ int main()
 
     printf("doing a search\n");
 
-    squeal_string *key2 = squeal_string_init("t23est", strlen("t23est"));
 
-    val = squeal_ht_find_sval(ht, key2);
+    val = squeal_ht_find_sval(ht, key);
 
     if (!val) {
         printf("could not find it\n");
@@ -50,7 +49,6 @@ int main()
     }
 
     squeal_string_free(key);
-    squeal_string_free(key2);
 
     printf("it is %lu\n", ht->seed);
 }

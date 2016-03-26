@@ -233,7 +233,7 @@ static int squeal_check_ht_size(hashtable *ht)
 
 static int squeal_realloc_ht(hashtable *ht)
 {
-    unsigned long actual_mask = ht->ma.mask + 1;
+    uint32_t actual_mask = ht->ma.mask + 1;
     unsigned long next_size = (actual_mask << 1);
     unsigned long unalloc_slots = next_size - actual_mask;
     int i;
