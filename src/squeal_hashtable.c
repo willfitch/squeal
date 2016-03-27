@@ -5,8 +5,8 @@
 static uint32_t hash(const char *key, uint32_t len, uint32_t seed);
 static long rand_seed(long max);
 static int squeal_ht_find_next_slot(hashtable *ht, uint32_t hash);
-static int squeal_check_ht_size(hashtable *ht);
-static int squeal_realloc_ht(hashtable *ht);
+static int squeal_check_ht_size(hashtable **ht);
+static int squeal_realloc_ht(hashtable **ht);
 static uint32_t squeal_ht_key_hash(hashtable *ht, squeal_string *key);
 
 hashtable *squeal_ht_init()
@@ -44,50 +44,55 @@ hashtable *squeal_ht_init()
             return NULL;
         }
 
+        ht->rec[i]->key = NULL;
+        ht->rec[i]->v.sval = NULL;
+        ht->rec[i]->v.ptr = NULL;
         ht->rec[i]->is_used = 0;
     }
 
     return ht;
 }
 
-int squeal_ht_add_sval(hashtable *ht, squeal_string *key, squeal_val *val)
+int squeal_ht_add_sval(hashtable **ht, squeal_string *key, squeal_val *val)
 {
-    uint32_t hash = squeal_ht_key_hash(ht, key);
+    uint32_t hash = squeal_ht_key_hash((*ht), key);
     int slot;
 
     squeal_check_ht_size(ht);
-    slot = squeal_ht_find_next_slot(ht, hash);
+    slot = squeal_ht_find_next_slot(*ht, hash);
 
     if (!slot) {
         return -1;
     }
 
-    ht->rec[slot]->is_used = 1;
-    ht->rec[slot]->hash = hash;
-    ht->rec[slot]->key = key;
-    ht->rec[slot]->type = HASHTABLE_TYPE_SVAL;
-    ht->rec[slot]->v.sval = val;
+    (*ht)->rec[slot]->is_used = 1;
+    (*ht)->rec[slot]->hash = hash;
+    (*ht)->rec[slot]->key = key;
+    (*ht)->rec[slot]->type = HASHTABLE_TYPE_SVAL;
+    (*ht)->rec[slot]->v.sval = val;
+    (*ht)->ma.filled++;
 
     return 1;
 }
 
-int squeal_ht_add_ptr(hashtable *ht, squeal_string *key, void *ptr)
+int squeal_ht_add_ptr(hashtable **ht, squeal_string *key, void *ptr)
 {
-    uint32_t hash = squeal_ht_key_hash(ht, key);
+    uint32_t hash = squeal_ht_key_hash((*ht), key);
     squeal_check_ht_size(ht);
-    int slot = squeal_ht_find_next_slot(ht, hash);
+    int slot = squeal_ht_find_next_slot((*ht), hash);
 
     if (!slot) {
         return -1;
     }
 
-    hash = squeal_ht_key_hash(ht, key);
+    hash = squeal_ht_key_hash((*ht), key);
 
-    ht->rec[slot]->is_used = 1;
-    ht->rec[slot]->hash = hash;
-    ht->rec[slot]->key = key;
-    ht->rec[slot]->type = HASHTABLE_TYPE_PTR;
-    ht->rec[slot]->v.ptr = ptr;
+    (*ht)->rec[slot]->is_used = 1;
+    (*ht)->rec[slot]->hash = hash;
+    (*ht)->rec[slot]->key = key;
+    (*ht)->rec[slot]->type = HASHTABLE_TYPE_PTR;
+    (*ht)->rec[slot]->v.ptr = ptr;
+    (*ht)->ma.filled++;
 
     return 1;
 }
@@ -120,6 +125,30 @@ void *squeal_ht_find_ptr(hashtable *ht, squeal_string *str)
 
 void squeal_ht_free(hashtable *ht)
 {
+    if (!ht) {
+        return;
+    }
+
+    SQUEAL_HASH_ITERATE(ht)
+    {
+        if (record) {
+            if (record->key != NULL) {
+                squeal_string_free(record->key);
+            }
+
+            if (record->v.ptr != NULL) {
+                free(record->v.ptr);
+            }
+
+            if (record->v.sval != NULL) {
+                squeal_sval_free(record->v.sval);
+            }
+
+            free(record);
+        }
+    } SQUEAL_HASH_ITERATE_END();
+
+    free(ht);
 }
 
 squeal_ht_record *squeal_ht_find(hashtable *ht, squeal_string *key)
@@ -170,7 +199,6 @@ static uint32_t squeal_ht_key_hash(hashtable *ht, squeal_string *key)
 static int squeal_ht_find_next_slot(hashtable *ht, uint32_t hash)
 {
     uint32_t slot = hash & ht->ma.mask;
-
     /*
      * If the hashed slot is available, return it
      */
@@ -218,9 +246,11 @@ static int squeal_ht_find_next_slot(hashtable *ht, uint32_t hash)
     return i;
 }
 
-static int squeal_check_ht_size(hashtable *ht)
+static int squeal_check_ht_size(hashtable **ht)
 {
-    double percentage = (ht->ma.filled / ((ht->ma.mask + 1) * .67));
+    int filled = (int) (*ht)->ma.filled;
+    int nmask = (int) (*ht)->ma.mask + 1;
+    double percentage = (double) filled / nmask;
     int alloc_stat = 1;
 
     if (percentage >= .67) {
@@ -230,37 +260,42 @@ static int squeal_check_ht_size(hashtable *ht)
     return alloc_stat;
 }
 
-static int squeal_realloc_ht(hashtable *ht)
+static int squeal_realloc_ht(hashtable **ht)
 {
-    uint32_t actual_mask = ht->ma.mask + 1;
-    unsigned long next_size = (actual_mask << 1);
-    unsigned long unalloc_slots = next_size - actual_mask;
+    uint32_t actual_mask = (*ht)->ma.mask + 1;
+    uint32_t next_size = (actual_mask << 1);
+    printf("next size :%d\n" , next_size);
     int i;
 
-    ht = (hashtable *) realloc(ht, sizeof(hashtable) + sizeof(squeal_ht_record) * next_size);
+    *ht = (hashtable *) realloc(*ht, sizeof(hashtable) + sizeof(squeal_ht_record) * next_size);
 
-    if (ht == NULL) {
+    if (*ht == NULL) {
         fprintf(stderr, "squeal_realloc_ht: unable to realloc hashtable");
         return -1;
     }
 
-    for (i = actual_mask; i < unalloc_slots; i++) {
-        ht->rec[i] = (squeal_ht_record *) malloc(sizeof(squeal_ht_record));
+    for (i = actual_mask; i < next_size; i++) {
+        (*ht)->rec[i] = (squeal_ht_record *) malloc(sizeof(squeal_ht_record));
 
-        if (ht->rec[i] == NULL) {
+        if ((*ht)->rec[i] == NULL) {
             fprintf(stderr, "squeal_realloc_ht: unable to alloc record");
 
             int x = actual_mask;
 
             for (; x < i; x++) {
-                free(ht->rec[x]);
+                free((*ht)->rec[x]);
             }
 
             return -1;
         }
 
-        ht->rec[i]->is_used = 0;
+        (*ht)->rec[i]->is_used = 0;
+        (*ht)->rec[i]->key = NULL;
+        (*ht)->rec[i]->v.sval = NULL;
+        (*ht)->rec[i]->v.ptr = NULL;
     }
+
+    (*ht)->ma.mask = (uint32_t) next_size - 1;
 
     return 1;
 }
