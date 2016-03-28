@@ -12,7 +12,6 @@
 #include <squeal_config.h>
 #include <squeal_hashtable.h>
 
-
 #define SVAL_STR(sval) sval->val.v->strval->val
 #define SVAL_INT(sval) sval->val.v.ival
 #define SVAL_DOUBLE(sval) sval->val.v.dval

@@ -205,7 +205,7 @@ squeal_ht_record *squeal_ht_find(hashtable *ht, squeal_string *key)
 
 static uint32_t squeal_ht_key_hash(hashtable *ht, squeal_string *key)
 {
-    return hash(key->val, key->len, ht->seed);
+    return hash(key->val, (uint32_t) key->len, (uint32_t) ht->seed);
 }
 
 static int squeal_ht_find_next_slot(hashtable *ht, uint32_t hash)
