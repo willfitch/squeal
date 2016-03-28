@@ -24,7 +24,6 @@
 squeal_server_info *squeal_server_info_init(char *addr, uint16_t port);
 void squeal_server_info_free(squeal_server_info *server_info);
 
-
 static inline void squeal_sval_free(squeal_val *val)
 {
     if (val) {

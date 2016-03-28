@@ -12,6 +12,8 @@ typedef struct _squeal_string squeal_string;
 typedef struct _squeal_server_info squeal_server_info;
 typedef struct _squeal_val squeal_val;
 typedef struct _squeal_hashtable hashtable;
+typedef struct _squeal_function squeal_function;
+typedef struct _squeal_function_params squeal_function_params;
 
 typedef unsigned long ulong;
 

@@ -11,30 +11,32 @@
 #define SQUEAL_HASHTABLE_ITERATE(ht) \
     do { \
         squeal_ht_record *record; \
-        uint32_t total_records = ht->ma.mask + 1; \
-        ht->pos = 0; \
-        for (; ht->pos < total_records; ht->pos++) { \
-            record = ht->rec[ht->pos];
+        uint32_t total_records = (ht)->ma.mask + 1; \
+        (ht)->pos = 0; \
+        for (; (ht)->pos < total_records; (ht)->pos++) { \
+            record = (ht)->rec[(ht)->pos];
 
-#define SQUEAL_HASHTABLE_ITERATE_SVAL(ht, entry) \
+#define SQUEAL_HASHTABLE_ITERATE_SVAL(ht, k, e) \
     SQUEAL_HASHTABLE_ITERATE(ht) \
-    if (!ht->rec[ht->pos]->is_used) {\
+    if (!(ht)->rec[ht->pos]->is_used) {\
         continue; \
     } \
     if (record->type != HASHTABLE_TYPE_SVAL) { \
         continue; \
     } \
-    entry = record->v.sval;
+    (e) = record->v.sval; \
+    (k) = record->key;
 
-#define SQUEAL_HASHTABLE_ITERATE_PTR(ht, entry) \
+#define SQUEAL_HASHTABLE_ITERATE_PTR(ht, k, e) \
     SQUEAL_HASHTABLE_ITERATE(ht) \
-    if (!ht->rec[ht->pos]->is_used) {\
+    if (!(ht)->rec[(ht)->pos]->is_used) {\
         continue; \
     } \
     if (record->type != HASHTABLE_TYPE_PTR) { \
         continue; \
     } \
-    entry = record->v.ptr;
+    (e) = record->v.ptr; \
+    (k) = record->key;
 
 #define SQUEAL_HASH_ITERATE_END() \
         } \

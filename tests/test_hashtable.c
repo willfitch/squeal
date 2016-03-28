@@ -101,6 +101,7 @@ START_TEST(test_SQUEAL_HASH_ITERATE_SVAL)
 
     squeal_val *sval;
     squeal_val *sval2;
+    squeal_string *keycopy;
 
     char *blah = malloc(sizeof(char) * 5);
     strncpy(blah, "will", sizeof("will"));
@@ -116,7 +117,7 @@ START_TEST(test_SQUEAL_HASH_ITERATE_SVAL)
 
     int found = 0;
 
-    SQUEAL_HASHTABLE_ITERATE_SVAL(ht, sval2)
+    SQUEAL_HASHTABLE_ITERATE_SVAL(ht, keycopy, sval2)
     {
         found++;
     } SQUEAL_HASH_ITERATE_END();
@@ -127,7 +128,7 @@ START_TEST(test_SQUEAL_HASH_ITERATE_SVAL)
 
     found = 0;
 
-    SQUEAL_HASHTABLE_ITERATE_SVAL(ht, sval2)
+    SQUEAL_HASHTABLE_ITERATE_SVAL(ht, keycopy, sval2)
     {
         found++;
     } SQUEAL_HASH_ITERATE_END();
@@ -144,6 +145,7 @@ START_TEST(test_SQUEAL_HASH_ITERATE_PTR)
 
     squeal_val *sval;
     void *other = NULL;
+    squeal_string *keycopy;
 
     char *blah = malloc(sizeof(char) * 5);
     strncpy(blah, "will", sizeof("will"));
@@ -159,7 +161,7 @@ START_TEST(test_SQUEAL_HASH_ITERATE_PTR)
 
     int found = 0;
 
-    SQUEAL_HASHTABLE_ITERATE_PTR(ht, other)
+    SQUEAL_HASHTABLE_ITERATE_PTR(ht, keycopy, other)
     {
         found++;
     } SQUEAL_HASH_ITERATE_END();
@@ -170,7 +172,7 @@ START_TEST(test_SQUEAL_HASH_ITERATE_PTR)
 
     found = 0;
 
-    SQUEAL_HASHTABLE_ITERATE_PTR(ht, other)
+    SQUEAL_HASHTABLE_ITERATE_PTR(ht, keycopy, other)
     {
         found++;
     } SQUEAL_HASH_ITERATE_END();
