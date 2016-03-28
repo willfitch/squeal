@@ -70,3 +70,27 @@ START_TEST(test_hashtable_realloc)
     ck_assert_int_eq(ht->ma.mask + 1, 64);
     squeal_ht_free(ht);
 } END_TEST
+
+START_TEST(test_hashtable_remove_key)
+{
+    hashtable *ht = squeal_ht_init();
+
+    squeal_val *sval;
+    SVAL_INIT(sval);
+
+    sval->val.v.dval = 55.5;
+    squeal_string *str = squeal_string_init("asdf", sizeof("asdf"));
+
+    squeal_ht_add_sval(&ht, str, sval);
+
+    squeal_val *copy = squeal_ht_find_sval(ht, str);
+
+    ck_assert_ptr_eq(copy, sval);
+    squeal_ht_remove_key(&ht, str);
+    copy = squeal_ht_find_sval(ht, str);
+
+    ck_assert_msg(copy == NULL, "");
+
+    squeal_ht_free(ht);
+
+} END_TEST

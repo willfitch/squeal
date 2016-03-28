@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     tcase_add_test(ht_case, test_hashtable_add_sval);
     tcase_add_test(ht_case, test_hashtable_add_ptr);
     tcase_add_test(ht_case, test_hashtable_realloc);
+    tcase_add_test(ht_case, test_hashtable_remove_key);
     suite_add_tcase(suite, ht_case);
 
     /* test runner */

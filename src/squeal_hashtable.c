@@ -44,6 +44,7 @@ hashtable *squeal_ht_init()
             return NULL;
         }
 
+        ht->rec[i]->id = (uint32_t) i;
         ht->rec[i]->key = NULL;
         ht->rec[i]->v.sval = NULL;
         ht->rec[i]->v.ptr = NULL;
@@ -102,6 +103,7 @@ squeal_val *squeal_ht_find_sval(hashtable *ht, squeal_string *key)
     squeal_ht_record *record = squeal_ht_find(ht, key);
 
     if (record == NULL
+        || !record->is_used
         || record->type != HASHTABLE_TYPE_SVAL
         || !record->v.sval) {
         return NULL;
@@ -123,6 +125,20 @@ void *squeal_ht_find_ptr(hashtable *ht, squeal_string *str)
     return record->v.ptr;
 }
 
+void squeal_ht_remove_key(hashtable **ht, squeal_string *key)
+{
+    squeal_ht_record *record = squeal_ht_find((*ht), key);
+
+    if (record != NULL) {
+        record->is_used = 0;
+
+        if (record->type == HASHTABLE_TYPE_SVAL) {
+            squeal_sval_free(record->v.sval);
+            record->v.sval = NULL;
+        }
+    }
+}
+
 void squeal_ht_free(hashtable *ht)
 {
     if (!ht) {
@@ -134,10 +150,6 @@ void squeal_ht_free(hashtable *ht)
         if (record) {
             if (record->key != NULL) {
                 squeal_string_free(record->key);
-            }
-
-            if (record->v.ptr != NULL) {
-                free(record->v.ptr);
             }
 
             if (record->v.sval != NULL) {
@@ -264,7 +276,6 @@ static int squeal_realloc_ht(hashtable **ht)
 {
     uint32_t actual_mask = (*ht)->ma.mask + 1;
     uint32_t next_size = (actual_mask << 1);
-    printf("next size :%d\n" , next_size);
     int i;
 
     *ht = (hashtable *) realloc(*ht, sizeof(hashtable) + sizeof(squeal_ht_record) * next_size);
@@ -289,6 +300,7 @@ static int squeal_realloc_ht(hashtable **ht)
             return -1;
         }
 
+        (*ht)->rec[i]->id = (uint32_t) i;
         (*ht)->rec[i]->is_used = 0;
         (*ht)->rec[i]->key = NULL;
         (*ht)->rec[i]->v.sval = NULL;

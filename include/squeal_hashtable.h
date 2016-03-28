@@ -41,6 +41,7 @@
 typedef struct _squeal_hashtable_record squeal_ht_record;
 
 struct _squeal_hashtable_record {
+    uint32_t        id;
     uint32_t        hash;
     squeal_string   *key;
     uint32_t        type;
@@ -56,9 +57,9 @@ struct _squeal_hashtable_record {
  * The idea behind this hashtable loosely follows the paradigm used
  * by Python. The idea is the size of the hashtable is always
  * the power of 2.  Initially, the size is 32 (slots). When the
- * used slots (ma.used) hit ~67%, the hashtable is reallocated
+ * used slots (ma.used) hit >= 67%, the hashtable is reallocated
  * to the next power of 2. The calculation for determining the
- * percentage used is (ma.filled / ((ma.mask + 1) * .67).
+ * percentage used is ma.filled / (ma.mask + 1).
  *
  * The ma.mask keeps track of the number of total slots. However,
  * it is always one less than the actual number of slots available. This
@@ -87,6 +88,7 @@ struct _squeal_hashtable {
 hashtable *squeal_ht_init();
 int squeal_ht_add_sval(hashtable **ht, squeal_string *key, squeal_val *val);
 int squeal_ht_add_ptr(hashtable **ht, squeal_string *key, void *ptr);
+void squeal_ht_remove_key(hashtable **ht, squeal_string *key);
 void squeal_ht_free(hashtable *ht);
 squeal_val *squeal_ht_find_sval(hashtable *ht, squeal_string *str);
 void *squeal_ht_find_ptr(hashtable *ht, squeal_string *str);

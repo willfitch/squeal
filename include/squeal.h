@@ -19,7 +19,7 @@
 
 #define SVAL_INIT(s) \
     s = (squeal_val *) malloc(sizeof(squeal_val)); \
-    s->val.v.strval = NULL;
+    s->val.v.strval = NULL; \
 
 /* server info functionality */
 squeal_server_info *squeal_server_info_init(char *addr, uint16_t port);
