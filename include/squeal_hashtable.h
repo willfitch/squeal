@@ -8,15 +8,16 @@
 #define HASHTABLE_TYPE_SVAL (1 << 1)
 #define HASHTABLE_TYPE_PTR (2 << 1)
 
-#define SQUEAL_HASH_ITERATE(ht) \
-    squeal_ht_record *record; \
-    uint32_t total_records = ht->ma.mask + 1; \
-    ht->pos = 0; \
-    for (; ht->pos < total_records; ht->pos++) { \
-        record = ht->rec[ht->pos];
+#define SQUEAL_HASHTABLE_ITERATE(ht) \
+    do { \
+        squeal_ht_record *record; \
+        uint32_t total_records = ht->ma.mask + 1; \
+        ht->pos = 0; \
+        for (; ht->pos < total_records; ht->pos++) { \
+            record = ht->rec[ht->pos];
 
-#define SQUEAL_HASH_ITERATE_SVAL(ht, entry) \
-    SQUEAL_HASH_ITERATE(ht) \
+#define SQUEAL_HASHTABLE_ITERATE_SVAL(ht, entry) \
+    SQUEAL_HASHTABLE_ITERATE(ht) \
     if (!ht->rec[ht->pos]->is_used) {\
         continue; \
     } \
@@ -25,18 +26,19 @@
     } \
     entry = record->v.sval;
 
-#define SQUEAL_HASH_ITERATE_PTR(ht, entry) \
-    SQUEAL_HASH_ITERATE(ht) \
+#define SQUEAL_HASHTABLE_ITERATE_PTR(ht, entry) \
+    SQUEAL_HASHTABLE_ITERATE(ht) \
     if (!ht->rec[ht->pos]->is_used) {\
         continue; \
     } \
     if (record->type != HASHTABLE_TYPE_PTR) { \
         continue; \
     } \
-    entry = *record->v.ptr;
+    entry = record->v.ptr;
 
 #define SQUEAL_HASH_ITERATE_END() \
-    } \
+        } \
+    } while (0);
 
 typedef struct _squeal_hashtable_record squeal_ht_record;
 

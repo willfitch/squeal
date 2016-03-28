@@ -94,3 +94,89 @@ START_TEST(test_hashtable_remove_key)
     squeal_ht_free(ht);
 
 } END_TEST
+
+START_TEST(test_SQUEAL_HASH_ITERATE_SVAL)
+{
+    hashtable *ht = squeal_ht_init();
+
+    squeal_val *sval;
+    squeal_val *sval2;
+
+    char *blah = malloc(sizeof(char) * 5);
+    strncpy(blah, "will", sizeof("will"));
+    SVAL_INIT(sval);
+
+    sval->val.v.ival = 55;
+
+    squeal_string *key = squeal_string_init("key", sizeof("key"));
+    squeal_string *another = squeal_string_init("key2", sizeof("key2"));
+
+    squeal_ht_add_sval(&ht, key, sval);
+    squeal_ht_add_ptr(&ht, another, blah);
+
+    int found = 0;
+
+    SQUEAL_HASHTABLE_ITERATE_SVAL(ht, sval2)
+    {
+        found++;
+    } SQUEAL_HASH_ITERATE_END();
+
+    ck_assert_int_eq(1, found);
+
+    squeal_ht_remove_key(&ht, key);
+
+    found = 0;
+
+    SQUEAL_HASHTABLE_ITERATE_SVAL(ht, sval2)
+    {
+        found++;
+    } SQUEAL_HASH_ITERATE_END();
+
+    ck_assert_int_eq(0, found);
+
+    free(blah);
+    squeal_ht_free(ht);
+} END_TEST
+
+START_TEST(test_SQUEAL_HASH_ITERATE_PTR)
+{
+    hashtable *ht = squeal_ht_init();
+
+    squeal_val *sval;
+    void *other = NULL;
+
+    char *blah = malloc(sizeof(char) * 5);
+    strncpy(blah, "will", sizeof("will"));
+    SVAL_INIT(sval);
+
+    sval->val.v.ival = 55;
+
+    squeal_string *key = squeal_string_init("key", sizeof("key"));
+    squeal_string *another = squeal_string_init("key2", sizeof("key2"));
+
+    squeal_ht_add_sval(&ht, key, sval);
+    squeal_ht_add_ptr(&ht, another, blah);
+
+    int found = 0;
+
+    SQUEAL_HASHTABLE_ITERATE_PTR(ht, other)
+    {
+        found++;
+    } SQUEAL_HASH_ITERATE_END();
+
+    ck_assert_int_eq(1, found);
+
+    squeal_ht_remove_key(&ht, another);
+
+    found = 0;
+
+    SQUEAL_HASHTABLE_ITERATE_PTR(ht, other)
+    {
+        found++;
+    } SQUEAL_HASH_ITERATE_END();
+
+    ck_assert_int_eq(0, found);
+
+    free(blah);
+    squeal_ht_free(ht);
+} END_TEST

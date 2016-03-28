@@ -145,7 +145,7 @@ void squeal_ht_free(hashtable *ht)
         return;
     }
 
-    SQUEAL_HASH_ITERATE(ht)
+    SQUEAL_HASHTABLE_ITERATE(ht)
     {
         if (record) {
             if (record->key != NULL) {
