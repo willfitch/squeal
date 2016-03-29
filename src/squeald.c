@@ -1,5 +1,4 @@
 #include "squeald.h"
-#include <squeal_types.h>
 #include <squeal_hashtable.h>
 
 
