@@ -54,6 +54,48 @@ hashtable *squeal_ht_init()
     return ht;
 }
 
+uint32_t squeal_ht_count_elements(hashtable *ht)
+{
+    uint32_t total_elements = 0;
+
+    SQUEAL_HASHTABLE_ITERATE(ht)
+    {
+        if (record->is_used) {
+            total_elements++;
+        }
+    } SQUEAL_HASH_ITERATE_END();
+
+    return total_elements;
+}
+
+uint32_t squeal_ht_count_ptr_elements(hashtable *ht)
+{
+    uint32_t total_elements = 0;
+
+    SQUEAL_HASHTABLE_ITERATE(ht)
+    {
+        if (record->is_used && record->type == HASHTABLE_TYPE_PTR) {
+            total_elements++;
+        }
+    } SQUEAL_HASH_ITERATE_END();
+
+    return total_elements;
+}
+
+uint32_t squeal_ht_count_sval_elements(hashtable *ht)
+{
+    uint32_t total_elements = 0;
+
+    SQUEAL_HASHTABLE_ITERATE(ht)
+    {
+        if (record->is_used && record->type == HASHTABLE_TYPE_SVAL) {
+            total_elements++;
+        }
+    } SQUEAL_HASH_ITERATE_END();
+
+    return total_elements;
+}
+
 int squeal_ht_add_sval(hashtable **ht, squeal_string *key, squeal_val *val)
 {
     uint32_t hash = squeal_ht_key_hash((*ht), key);

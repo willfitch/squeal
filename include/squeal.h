@@ -12,13 +12,24 @@
 #include <squeal_config.h>
 #include <squeal_hashtable.h>
 
-#define SVAL_STR(sval) sval->val.v->strval->val
-#define SVAL_INT(sval) sval->val.v.ival
-#define SVAL_DOUBLE(sval) sval->val.v.dval
+#define S_STR(sval) sval->val.v->strval->val
+#define S_INT(sval) sval->val.v.ival
+#define S_DOUBLE(sval) sval->val.v.dval
 
-#define SVAL_INIT(s) \
-    s = (squeal_val *) malloc(sizeof(squeal_val)); \
-    s->val.v.strval = NULL; \
+#define SVAL_INIT(s) do {\
+    (s) = (squeal_val *) malloc(sizeof(squeal_val)); \
+    (s)->val.v.strval = NULL; \
+    } while (0);
+
+#define SVAL_STR(s, x) \
+    SVAL_INIT((s)); do {\
+    (s)->val.v->strval = squeal_string_init((x), sizeof((x))); \
+    } while (0);
+
+#define SVAL_PTR(s, x) \
+    SVAL_INIT((s)); do {\
+    (s)->val.v->ptr = (x) \
+    } while (0);
 
 /* server info functionality */
 squeal_server_info *squeal_server_info_init(char *addr, uint16_t port);

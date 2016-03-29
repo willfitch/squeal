@@ -90,6 +90,9 @@ struct _squeal_hashtable {
 };
 
 hashtable *squeal_ht_init();
+uint32_t squeal_ht_count_elements(hashtable *ht);
+uint32_t squeal_ht_count_ptr_elements(hashtable *ht);
+uint32_t squeal_ht_count_sval_elements(hashtable *ht);
 int squeal_ht_add_sval(hashtable **ht, squeal_string *key, squeal_val *val);
 int squeal_ht_add_ptr(hashtable **ht, squeal_string *key, void *ptr);
 void squeal_ht_remove_key(hashtable **ht, squeal_string *key);

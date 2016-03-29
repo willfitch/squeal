@@ -1,12 +1,16 @@
 %{
-#include "squeal_ast.h"
+#include "squeal_compile.h"
+
+enum _squeal_ast_kind exposed;
+
+#define YYSIZE_T size_t
+#define YYERROR_VERBOSE
 
 %}
 
 %pure_parser
 
 %destructor { squeal_ast_destroy($$); } <ast>
-%destructor { if ($$) squeal_string_free($$); } <str>
 
 %left OR
 %left AND
@@ -14,13 +18,11 @@
 %left '+' '-'
 %left '*' '/'
 
-%token <ast> INTEGER "integer"
-%token <ast> FLOAT "float"
-%token <ast> STRING "identifier"
+%token INTEGER "integer"
+%token FLOAT "float"
+%token STRING "identifier"
 
 %token END 0 "end of statement"
-%token QUALIFIED_IDENTIFIER "identifier"
-%token QUALIFIED_STAR "asterisk"
 %token SELECT "SELECT"
 %token USE "USE"
 %token INDEX "INDEX"
@@ -30,12 +32,12 @@
 %token FROM "FROM"
 %token WHERE "WHERE"
 %token BETWEEN "BETWEEN"
-%token GROUP_BY "GROUP BY"
+%token GROUP "GROUP"
+%token BY "BY"
 %token HAVING "HAVING"
 %token ORDER_BY "ORDER BY"
 %token SET_OPERATOR "SET_OPERATOR"
 %token NAMED_PARAM_SEP "NAMED_PARAM_SEP"
-%token COMMA ", COMMA"
 %token PLUS "+ PLUS"
 %token MINUS "- MINUS"
 %token DIVIDE "/ DIVIDE"
@@ -48,11 +50,7 @@
 %token CMP_GREATER "> GREATER"
 %token CMP_LESS_OR_EQUAL "<= LESS_EQUAL"
 %token CMP_LESS "< LESS"
-%token LPAREN "( LPAREN"
-%token RPAREN ") RPAREN"
 %token CONCAT "|| CONCAT"
-%token LCURLY "{ LCURLY"
-%token RCURLY "} RCURLY"
 %token AS "AS"
 %token ALL "ALL"
 %token ANY "ANY"
@@ -64,15 +62,14 @@
 %token LOGICAL_AND "AND"
 %token LOGICAL_OR "OR"
 %token LOGICAL_NOT "NOT"
-%token INNER_JOIN "INNER JOIN"
-%token LEFT_OUTER_JOIN "LEFT OUTER JOIN"
-%token RIGHT_OUTER_JOIN "RIGHT OUTER JOIN"
+%token INNER "INNER"
+%token OUTER "OUTER"
 %token JOIN "JOIN"
-%token LEFT_JOIN "LEFT JOIN"
-%token RIGHT_JOIN "RIGHT JOIN"
-%token FULL_JOIN "FULL JOIN"
-%token NATURAL_JOIN "NATURAL JOIN"
-%token CROSS_JOIN "CROSS JOIN"
+%token LEFT "LEFT"
+%token RIGHT "RIGHT"
+%token FULL "FULL"
+%token NATURAL "NATURAL"
+%token CROSS "CROSS"
 %token CASE "CASE"
 %token WHEN "WHEN"
 %token THEN "THEN"
@@ -95,25 +92,47 @@
 %token NULL "NULL"
 %token BOOLEAN "BOOLEAN"
 %token BIND "BIND"
-%token <ival> INTEGER "INTEGER"
-%token <strval> IDENTIFIER "IDENTIFIER"
-%token <strval> QUOTED_IDENTIFIER "QUOTED_IDENTIFIER"
+%token INTEGER "INTEGER"
+%token IDENTIFIER "IDENTIFIER"
+%token QUOTED_IDENTIFIER "QUOTED_IDENTIFIER"
 
 /* force parse error */
 %token T_ERROR
+
+%type <ast> identifier sql_statement
 
 %start sql_query
 
 %%
 
 sql_query:
-    sql_statement { $$ = squeal_ast_create(); }
+    sql_statement { $$ = $1; }
 ;
 
 identifier:
     STRING { $$ = $1; }
 ;
 
+name:
+    IDENTIFIER  { $$ = $1; }
+;
+
+orderby_statement:
+        /* empty */ { $$ = NULL; }
+    |   ORDER BY name_list      { $$ = squeal_ast_create(SQUEAL_AST_ORDER_BY, $2, NULL); }
+    |   ORDER BY name_list ASC  { $$ = squeal_ast_create(SQUEAL_AST_ORDER_BY, $2, ORDER_BY_ASC)}
+    |   ORDER BY name_list DESC { $$ = squeal_ast_create(SQUEAL_AST_ORDER_BY, $2, ORDER_BY_DESC)}
+;
+
+column_list:
+        /* empty */ { $$ = NULL; }
+    |   name_list { $$ = $1; }
+;
+
+name_list:
+        name { $$ = squeal_ast_create_list(1, SQUEAL_AST_NAME_LIST, $1); }
+    |   name_list ',' name { $$ = squeal_ast_list_add($1, $3); }
+;
 
 
 %%

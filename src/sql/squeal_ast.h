@@ -1,22 +1,24 @@
 #ifndef HAVE_SQUEAL_AST_H
 #define HAVE_SQUEAL_AST_H
 
-#include <stdlib.h>
-#include <squeal_types.h>
+#include <squeal.h>
+#include <stdarg.h>
 
-typedef struct _squeal_ast squeal_ast;
-typedef uint16_t squeal_ast_kind;
-typedef uint16_t squeal_ast_attr;
-typedef struct _squeal_ast_list squeal_ast_list;
-typedef struct _squeal_ast_val squeal_ast_val;
+#define SQUEAL_AST_CHILD_SHIFT_ZERO 6
+#define SQUEAL_AST_CHILD_SHIFT 8
 
 enum _squeal_ast_kind {
-    SQUEAL_AST_USE,
-    SQUEAL_AST_SHOW_DATABASES,
+    /* 0 params */
+    SQUEAL_AST_USE = 1 << SQUEAL_AST_CHILD_SHIFT,
+
+    /* 1 param */
+    SQUEAL_AST_SHOW_DATABASES = 1 << SQUEAL_AST_CHILD_SHIFT_ZERO,
+    SQUEAL_AST_NAME_LIST,
+
+    SQUEAL_AST_ORDER_BY,
     SQUEAL_AST_SELECT,
     SQUEAL_AST_FUNCTION,
     SQUEAL_AST_TABLE,
-    SQUEAL_AST_SET_OPERATOR,
     SQUEAL_AST_AND,
     SQUEAL_AST_OR,
     SQUEAL_AST_CONDITION,
@@ -42,6 +44,10 @@ enum _squeal_ast_kind {
     SQUEAL_AST_CASE_ITEM
 };
 
+typedef struct _squeal_ast squeal_ast;
+typedef uint32_t squeal_ast_kind;
+typedef uint32_t squeal_ast_attr;
+
 struct _squeal_ast {
     squeal_ast_kind kind;
     squeal_ast_attr attr;
@@ -49,23 +55,29 @@ struct _squeal_ast {
     squeal_ast *child[1];
 };
 
-struct _squeal_ast_list {
+typedef struct _squeal_ast_list {
     squeal_ast_kind kind;
     squeal_ast_attr attr;
     uint32_t lineno;
     uint32_t children;
     squeal_ast *child[1];
-};
+} squeal_ast_list;
 
-struct _squeal_ast_val {
+typedef struct _squeal_ast_sval {
     squeal_ast_kind kind;
     squeal_ast_attr attr;
     squeal_val val;
-};
+} squeal_ast_sval;
 
-struct _squeal_ast_func {
+typedef struct _squeal_ast_func {
+    squeal_ast_kind kind;
+    squeal_ast_attr attr;
+    uint32_t lineno;
+    squeal_function *function;
+} squeal_ast_func;
 
-};
-
-
+squeal_ast *squeal_ast_create(uint32_t kind, ...);
+squeal_ast *squeal_ast_create_list(uint32_t children, squeal_ast_kind kind, ...);
+squeal_ast *squeal_ast_list_add(squeal_ast *ast, squeal_ast *op);
+void squeal_ast_free(squeal_ast *ast);
 #endif
