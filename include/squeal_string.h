@@ -8,13 +8,13 @@ struct _squeal_string {
     char val[1];
 };
 
-squeal_string *squeal_string_init(const char *val, size_t len);
-squeal_string *squeal_string_alloc(size_t len);
-squeal_string *squeal_string_dup(squeal_string *s);
-squeal_string *squeal_string_realloc(squeal_string *s, size_t newlen);
+SquealString *squeal_string_init(const char *val, size_t len);
+SquealString *squeal_string_alloc(size_t len);
+SquealString *squeal_string_dup(SquealString *s);
+SquealString *squeal_string_realloc(SquealString *s, size_t newlen);
 
-int squeal_string_equals(squeal_string *s1, squeal_string *s2);
-void squeal_string_empty(squeal_string *s);
-void squeal_string_free(squeal_string *str);
+int squeal_string_equals(SquealString *s1, SquealString *s2);
+void squeal_string_empty(SquealString *s);
+void squeal_string_free(SquealString *str);
 
 #endif

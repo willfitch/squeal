@@ -47,12 +47,12 @@ typedef struct _squeal_hashtable_record squeal_ht_record;
 struct _squeal_hashtable_record {
     uint32_t        id;
     uint32_t        hash;
-    squeal_string   *key;
+    SquealString   *key;
     uint32_t        type;
     int             is_used;
 
     struct {
-        squeal_val  *sval;
+        sval        *sval;
         void        *ptr; /* used for random pointers */
     } v;
 };
@@ -89,16 +89,16 @@ struct _squeal_hashtable {
     squeal_ht_record    *rec[1];
 };
 
-hashtable *squeal_ht_init();
-uint32_t squeal_ht_count_elements(hashtable *ht);
-uint32_t squeal_ht_count_ptr_elements(hashtable *ht);
-uint32_t squeal_ht_count_sval_elements(hashtable *ht);
-int squeal_ht_add_sval(hashtable **ht, squeal_string *key, squeal_val *val);
-int squeal_ht_add_ptr(hashtable **ht, squeal_string *key, void *ptr);
-void squeal_ht_remove_key(hashtable **ht, squeal_string *key);
-void squeal_ht_free(hashtable *ht);
-squeal_val *squeal_ht_find_sval(hashtable *ht, squeal_string *str);
-void *squeal_ht_find_ptr(hashtable *ht, squeal_string *str);
-squeal_ht_record *squeal_ht_find(hashtable *ht, squeal_string *key);
+HashTable *squeal_ht_init();
+uint32_t squeal_ht_count_elements(HashTable *ht);
+uint32_t squeal_ht_count_ptr_elements(HashTable *ht);
+uint32_t squeal_ht_count_sval_elements(HashTable *ht);
+int squeal_ht_add_sval(HashTable **ht, SquealString *key, sval *val);
+int squeal_ht_add_ptr(HashTable **ht, SquealString *key, void *ptr);
+void squeal_ht_remove_key(HashTable **ht, SquealString *key);
+void squeal_ht_free(HashTable *ht);
+sval *squeal_ht_find_sval(HashTable *ht, SquealString *str);
+void *squeal_ht_find_ptr(HashTable *ht, SquealString *str);
+squeal_ht_record *squeal_ht_find(HashTable *ht, SquealString *key);
 
 #endif

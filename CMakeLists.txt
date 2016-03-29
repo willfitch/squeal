@@ -19,8 +19,7 @@ set(SQUEAL_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/src/squeal_string.c
         ${CMAKE_SOURCE_DIR}/src/squeal_threads.c
         ${CMAKE_SOURCE_DIR}/src/squeal_hashtable.c
-        ${CMAKE_SOURCE_DIR}/src/sql/squeal_ast.c
-        ${CMAKE_SOURCE_DIR}/src/sql/squeal_compile.c
+        ${CMAKE_SOURCE_DIR}/src/squeal_compile.c
         ${CMAKE_SOURCE_DIR}/src/squeald.h)
 
 set(SQUEALD_SOURCE_FILES ${SQUEAL_SOURCE_FILES} src/squeald.c)

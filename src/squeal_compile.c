@@ -11,7 +11,7 @@ void squeal_function_param_free(squeal_function_param *param)
 
 void squeal_function_free(squeal_function *func)
 {
-    squeal_string *key;
+    SquealString *key;
     squeal_function_param *param;
 
     if (func->name) {

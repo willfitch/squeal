@@ -3,20 +3,20 @@
 
 START_TEST(test_hashtable_init)
 {
-    hashtable *ht = squeal_ht_init();
+    HashTable *ht = squeal_ht_init();
     ck_assert_msg(ht != NULL, "unable to allocate hashtable");
     squeal_ht_free(ht);
 } END_TEST
 
 START_TEST(test_hashtable_add_sval)
 {
-    hashtable *ht = squeal_ht_init();
-    squeal_val *val;
+    HashTable *ht = squeal_ht_init();
+    sval *val;
     SVAL_INIT(val);
-    squeal_val *val2;
+    sval *val2;
     val->val.v.ival = 234;
 
-    squeal_string *key = squeal_string_init("testkey", sizeof("testkey"));
+    SquealString *key = squeal_string_init("testkey", sizeof("testkey"));
     squeal_ht_add_sval(&ht, key, val);
 
     val2 = squeal_ht_find_sval(ht, key);
@@ -27,11 +27,11 @@ START_TEST(test_hashtable_add_sval)
 
 START_TEST(test_hashtable_add_ptr)
 {
-    hashtable *ht = squeal_ht_init();
+    HashTable *ht = squeal_ht_init();
     char *blah = malloc(sizeof("willy"));
     char *another;
     strncpy(blah, "willy", sizeof("willy"));
-    squeal_string *key = squeal_string_init("testkey", sizeof("testkey"));
+    SquealString *key = squeal_string_init("testkey", sizeof("testkey"));
     squeal_ht_add_ptr(&ht, key, blah);
 
     another = squeal_ht_find_ptr(ht, key);
@@ -42,7 +42,7 @@ START_TEST(test_hashtable_add_ptr)
 
 START_TEST(test_hashtable_realloc)
 {
-    hashtable *ht = squeal_ht_init();
+    HashTable *ht = squeal_ht_init();
 
     ck_assert_int_eq(ht->ma.mask + 1, 32);
 
@@ -50,9 +50,9 @@ START_TEST(test_hashtable_realloc)
     int i = 0;
 
     for (; i < 23; i++) {
-        squeal_string *key = squeal_string_alloc(sizeof("key-") + sizeof(int));
+        SquealString *key = squeal_string_alloc(sizeof("key-") + sizeof(int));
         sprintf(key->val, "key-%d", i);
-        squeal_val *val;
+        sval *val;
         SVAL_INIT(val);
         val->val.v.dval = 55.5;
         squeal_ht_add_sval(&ht, key, val);
@@ -61,8 +61,8 @@ START_TEST(test_hashtable_realloc)
     ck_assert_int_eq(ht->ma.mask + 1, 32);
 
     /*Add 1 more element */
-    squeal_string *next = squeal_string_init("work", sizeof("work"));
-    squeal_val *nextval;
+    SquealString *next = squeal_string_init("work", sizeof("work"));
+    sval *nextval;
     SVAL_INIT(nextval);
 
     squeal_ht_add_sval(&ht, next, nextval);
@@ -73,19 +73,19 @@ START_TEST(test_hashtable_realloc)
 
 START_TEST(test_hashtable_remove_key)
 {
-    hashtable *ht = squeal_ht_init();
+    HashTable *ht = squeal_ht_init();
 
-    squeal_val *sval;
-    SVAL_INIT(sval);
+    sval *sqval;
+    SVAL_INIT(sqval);
 
-    sval->val.v.dval = 55.5;
-    squeal_string *str = squeal_string_init("asdf", sizeof("asdf"));
+    sqval->val.v.dval = 55.5;
+    SquealString *str = squeal_string_init("asdf", sizeof("asdf"));
 
-    squeal_ht_add_sval(&ht, str, sval);
+    squeal_ht_add_sval(&ht, str, sqval);
 
-    squeal_val *copy = squeal_ht_find_sval(ht, str);
+    sval *copy = squeal_ht_find_sval(ht, str);
 
-    ck_assert_ptr_eq(copy, sval);
+    ck_assert_ptr_eq(copy, sqval);
     squeal_ht_remove_key(&ht, str);
     copy = squeal_ht_find_sval(ht, str);
 
@@ -97,22 +97,22 @@ START_TEST(test_hashtable_remove_key)
 
 START_TEST(test_SQUEAL_HASH_ITERATE_SVAL)
 {
-    hashtable *ht = squeal_ht_init();
+    HashTable *ht = squeal_ht_init();
 
-    squeal_val *sval;
-    squeal_val *sval2;
-    squeal_string *keycopy;
+    sval *sqval;
+    sval *sval2;
+    SquealString *keycopy;
 
     char *blah = malloc(sizeof(char) * 5);
     strncpy(blah, "will", sizeof("will"));
-    SVAL_INIT(sval);
+    SVAL_INIT(sqval);
 
-    sval->val.v.ival = 55;
+    sqval->val.v.ival = 55;
 
-    squeal_string *key = squeal_string_init("key", sizeof("key"));
-    squeal_string *another = squeal_string_init("key2", sizeof("key2"));
+    SquealString *key = squeal_string_init("key", sizeof("key"));
+    SquealString *another = squeal_string_init("key2", sizeof("key2"));
 
-    squeal_ht_add_sval(&ht, key, sval);
+    squeal_ht_add_sval(&ht, key, sqval);
     squeal_ht_add_ptr(&ht, another, blah);
 
     int found = 0;
@@ -141,22 +141,22 @@ START_TEST(test_SQUEAL_HASH_ITERATE_SVAL)
 
 START_TEST(test_SQUEAL_HASH_ITERATE_PTR)
 {
-    hashtable *ht = squeal_ht_init();
+    HashTable *ht = squeal_ht_init();
 
-    squeal_val *sval;
+    sval *sqval;
     void *other = NULL;
-    squeal_string *keycopy;
+    SquealString *keycopy;
 
     char *blah = malloc(sizeof(char) * 5);
     strncpy(blah, "will", sizeof("will"));
-    SVAL_INIT(sval);
+    SVAL_INIT(sqval);
 
-    sval->val.v.ival = 55;
+    sqval->val.v.ival = 55;
 
-    squeal_string *key = squeal_string_init("key", sizeof("key"));
-    squeal_string *another = squeal_string_init("key2", sizeof("key2"));
+    SquealString *key = squeal_string_init("key", sizeof("key"));
+    SquealString *another = squeal_string_init("key2", sizeof("key2"));
 
-    squeal_ht_add_sval(&ht, key, sval);
+    squeal_ht_add_sval(&ht, key, sqval);
     squeal_ht_add_ptr(&ht, another, blah);
 
     int found = 0;

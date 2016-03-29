@@ -2,15 +2,14 @@
 #define HAVE_SQUEAL_COMPILE_H
 
 #include <squeal.h>
-#include "squeal_ast.h"
 
 struct _squeal_function_param {
-    squeal_string *name;
+    SquealString *name;
 };
 
 struct _squeal_function {
-    squeal_string *name;
-    hashtable *params;
+    SquealString *name;
+    HashTable *params;
 };
 
 void squeal_function_free(squeal_function *func);

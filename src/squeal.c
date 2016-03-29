@@ -4,19 +4,19 @@
 #include <event2/listener.h>
 #include <assert.h>
 
-squeal_server_info *squeal_server_info_init(char *addr, uint16_t port)
+ServerInfo *squeal_server_info_init(char *addr, uint16_t port)
 {
-    squeal_server_info *info;
+    ServerInfo *info;
 
     assert(addr != NULL);
 
-    info = (squeal_server_info *) malloc(sizeof(squeal_server_info));
+    info = (ServerInfo *) malloc(sizeof(ServerInfo));
     info->address = squeal_string_init(addr, sizeof(addr));
     info->port = port;
     return info;
 }
 
-void squeal_server_info_free(squeal_server_info *server_info)
+void squeal_server_info_free(ServerInfo *server_info)
 {
     if (server_info) {
         squeal_string_free(server_info->address);
