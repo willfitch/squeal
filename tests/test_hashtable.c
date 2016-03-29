@@ -1,5 +1,6 @@
 #include <check.h>
 #include <squeal.h>
+#include <squeal_hashtable.h>
 
 START_TEST(test_hashtable_init)
 {

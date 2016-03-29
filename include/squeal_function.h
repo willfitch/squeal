@@ -1,10 +1,7 @@
 #ifndef HAVE_SQUEAL_FUNCTION_H
 #define HAVE_SQUEAL_FUNCTION_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <squeal_sval.h>
-#include <squeal_types.h>
+#include <squeal.h>
 
 #define SQL_PARAMETER_IN (1 << 1)
 #define SQL_PARAMETER_OUT (1 << 2)

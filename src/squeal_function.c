@@ -1,5 +1,6 @@
 #include <squeal_function.h>
 
+
 static squeal_always_inline void clean_allocated_function(SqlFunction **function);
 
 SqlFunction *sql_function_init()
