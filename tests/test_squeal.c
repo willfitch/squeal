@@ -1,6 +1,14 @@
 #include <check.h>
 #include <squeal.h>
 
+START_TEST(test_sql_statement_init)
+{
+    SqlStatement *statement = sql_statement_init();
+    ck_assert_ptr_eq(statement->raw_query, NULL);
+    ck_assert_ptr_eq(statement->select_stmt, NULL);
+    sql_statement_free(statement);
+} END_TEST;
+
 START_TEST(test_sql_select_init)
 {
     Select *select = sql_select_init();

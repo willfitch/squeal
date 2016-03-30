@@ -13,10 +13,11 @@
 
 /* SELECT statement */
 Select *sql_select_init();
+void sql_select_free(Select *select);
 
 /* SQL statement */
 SqlStatement *sql_statement_init();
-void sql_select_free(Select *select);
+void sql_statement_free(SqlStatement *statement);
 
 Table *sql_table_init();
 void sql_table_free(Table *table);

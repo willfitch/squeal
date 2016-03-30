@@ -18,6 +18,21 @@ SqlStatement *sql_statement_init()
     return statement;
 }
 
+void sql_statement_free(SqlStatement *statement)
+{
+    if (statement) {
+        if (statement->raw_query) {
+            squeal_string_free(statement->raw_query);
+        }
+
+        if (statement->select_stmt) {
+            sql_select_free(statement->select_stmt);
+        }
+
+        free(statement);
+    }
+}
+
 /* SELECT statement */
 Select *sql_select_init()
 {
