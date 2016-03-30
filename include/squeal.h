@@ -16,18 +16,26 @@ Select *sql_select_init();
 
 /* SQL statement */
 SqlStatement *sql_statement_init();
+void sql_select_free(Select *select);
+
+Table *sql_table_init();
+void sql_table_free(Table *table);
 
 /* ORDER BY */
-OrderBy *order_by_init();
+OrderBy *sql_order_by_init();
+void sql_order_by_free(OrderBy *order);
 
 /* GROUP BY */
-GroupBy *group_by_init();
+GroupBy *sql_group_by_init();
+void sql_group_by_free(GroupBy *group);
 
 /* columns */
-Column *column_init();
+Column *sql_column_init();
+void sql_column_free(Column *column);
 
 /* WHERE clause */
-Where *where_init();
+Where *sql_where_init();
+void sql_where_free(Where *where);
 
 
 #endif

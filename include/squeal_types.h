@@ -31,8 +31,9 @@ typedef struct _sql_function SqlFunction;
 typedef struct _order_by OrderBy;
 typedef struct _column Column;
 typedef struct _table Table;
-typedef struct _sql_hint SqlHint;
 typedef struct _group_by GroupBy;
+typedef struct _select_statement Select;
+typedef struct _sql_statement SqlStatement;
 
 typedef enum {
     TYPE_DOUBLE,
@@ -89,6 +90,8 @@ struct _column {
     SquealString *alias;
     SqlType val_type;
     SquealString *name;
+    Column *next;
+    Column *prev;
 };
 
 struct _where {
@@ -110,19 +113,22 @@ struct _where {
 
 struct _order_by {
     short direction;
-    Column *columns[1]; /* struct hack. must be last! */
+    Column *columns; /* struct hack. must be last! */
 };
 
 struct _group_by {
-    Column *columns[1];
+    Column *columns;
 };
 
 struct _table {
     SquealString *name;
     SquealString *alias;
+
+    Table *next;
+    Table *prev;
 };
 
-typedef struct {
+struct _select_statement {
     Where *where;
 
     Table *tables;
@@ -130,15 +136,15 @@ typedef struct {
     GroupBy *group;
     uint32_t limit;
     uint32_t offset;
-    Column *columns[1]; /* struct hack. must be last! */
-} Select;
+    Column *columns; /* struct hack. must be last! */
+};
 
-typedef struct {
+struct _sql_statement {
     SquealString *raw_query; /* raw sql string */
 
     Select *select_stmt; /* SELECT statement */
     StatementType type; /* identification of the statement type */
-} SqlStatement;
+};
 
 /*
  * Represents a client connection
