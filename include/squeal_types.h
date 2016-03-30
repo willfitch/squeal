@@ -24,12 +24,15 @@
 
 typedef struct _squeal_string SquealString;
 typedef struct _squeal_hashtable HashTable;
-typedef struct _squeal_function squeal_function;
-typedef struct _squeal_function_param squeal_function_param;
 typedef struct _squeal_val sval;
 typedef struct _where Where;
 typedef struct _parameter Parameter;
 typedef struct _sql_function SqlFunction;
+typedef struct _order_by OrderBy;
+typedef struct _column Column;
+typedef struct _table Table;
+typedef struct _sql_hint SqlHint;
+typedef struct _group_by GroupBy;
 
 typedef enum {
     TYPE_DOUBLE,
@@ -77,7 +80,7 @@ struct _squeal_val {
     } val;
 };
 
-typedef struct {
+struct _column {
     union {
         SqlFunction *function;
         sval *sval;
@@ -86,7 +89,7 @@ typedef struct {
     SquealString *alias;
     SqlType val_type;
     SquealString *name;
-} Column;
+};
 
 struct _where {
     sval *left; /* left operand */
@@ -105,14 +108,28 @@ struct _where {
     HashTable *values; /* HashTable of svals for in clauses */
 };
 
-typedef struct {
+struct _order_by {
     short direction;
     Column *columns[1]; /* struct hack. must be last! */
-} OrderBy;
+};
+
+struct _group_by {
+    Column *columns[1];
+};
+
+struct _table {
+    SquealString *name;
+    SquealString *alias;
+};
 
 typedef struct {
     Where *where;
+
+    Table *tables;
     OrderBy *order;
+    GroupBy *group;
+    uint32_t limit;
+    uint32_t offset;
     Column *columns[1]; /* struct hack. must be last! */
 } Select;
 

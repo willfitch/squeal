@@ -11,7 +11,7 @@ struct _squeal_string {
 SquealString *squeal_string_init(const char *val, size_t len);
 SquealString *squeal_string_alloc(size_t len);
 SquealString *squeal_string_dup(SquealString *s);
-SquealString *squeal_string_realloc(SquealString *s, size_t newlen);
+int squeal_string_realloc(SquealString **s, size_t newlen);
 
 int squeal_string_equals(SquealString *s1, SquealString *s2);
 void squeal_string_empty(SquealString *s);

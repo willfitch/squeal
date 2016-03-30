@@ -35,14 +35,14 @@ void sql_function_free(SqlFunction *func);
 
 static squeal_always_inline int sql_function_realloc(SqlFunction **func, size_t more_params)
 {
-    *func = (SqlFunction *) realloc(*func, sizeof(SqlFunction) + sizeof(Parameter) * more_params);
+    SqlFunction *function = (SqlFunction *) realloc(*func, sizeof(SqlFunction) + sizeof(Parameter) * more_params);
 
-    if (*func == NULL) {
+    if (function == NULL) {
         fprintf(stderr, "sql_function_realloc: unable to realloc function");
         return -1;
     }
 
-    (*func)->total_params += more_params;
+    *func = function;
     return 1;
 }
 

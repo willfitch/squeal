@@ -26,12 +26,19 @@ SquealString *squeal_string_dup(SquealString *s)
     return squeal_string_init(s->val, s->len);
 }
 
-SquealString *squeal_string_realloc(SquealString *s, size_t newlen)
+int squeal_string_realloc(SquealString **s, size_t newlen)
 {
     SquealString *retval;
-    retval = (SquealString *) realloc(s, newlen);
+    retval = (SquealString *) realloc(*s, newlen);
+
+    if (retval == NULL) {
+        fprintf(stderr, "squeal_string_realloc: unable to realloc string");
+        return -1;
+    }
+
     retval->len = newlen;
-    return retval;
+    *s = retval;
+    return 1;
 }
 
 void squeal_string_empty(SquealString *s)

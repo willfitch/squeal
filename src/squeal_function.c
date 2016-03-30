@@ -1,6 +1,5 @@
 #include <squeal_function.h>
 
-
 static squeal_always_inline void clean_allocated_function(SqlFunction **function);
 
 SqlFunction *sql_function_init()
@@ -29,7 +28,6 @@ SqlFunction *sql_function_param_init(uint16_t num_params)
 
     clean_allocated_function(&function);
     function->total_params = num_params;
-    function->used_params = 0;
 
     return function;
 }
@@ -59,11 +57,18 @@ Parameter *parameter_init()
 
 void sql_function_add_param(SqlFunction **func, Parameter *param)
 {
+    uint16_t previous_total_params = (*func)->total_params;
+    uint16_t previous_used_params = (*func)->used_params;
+
     if ((*func)->total_params == (*func)->used_params) {
         sql_function_realloc(func, 1);
     }
 
-    (*func)->params[(*func)->used_params - 1] = param;
+    (*func)->total_params = previous_total_params;
+    (*func)->used_params = previous_used_params;
+
+    (*func)->params[previous_used_params] = param;
+    (*func)->total_params++;
     (*func)->used_params++;
 }
 
