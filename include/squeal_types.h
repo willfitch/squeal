@@ -34,6 +34,10 @@ typedef struct _table Table;
 typedef struct _group_by GroupBy;
 typedef struct _select_statement Select;
 typedef struct _sql_statement SqlStatement;
+typedef struct _squeal_column ResultColumn;
+typedef struct _squeal_row ResultRow;
+typedef struct _squeal_result Result;
+typedef struct _squeal_backend Backend;
 
 typedef enum {
     TYPE_DOUBLE,
@@ -142,8 +146,11 @@ struct _select_statement {
 struct _sql_statement {
     SquealString *raw_query; /* raw sql string */
 
+    SquealString *err; /* only populated if there's an error */
     Select *select_stmt; /* SELECT statement */
     StatementType type; /* identification of the statement type */
+
+    Backend *backend; /* backend to use for this query */
 };
 
 /*
@@ -153,5 +160,9 @@ typedef struct {
     uint64_t connection_id;
 } Client;
 
+typedef struct {
+    const char *token;
+    uint32_t len;
+} Token;
 
 #endif
