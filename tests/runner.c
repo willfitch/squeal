@@ -3,6 +3,7 @@
 #include "test_function.c"
 #include "test_string.c"
 #include "test_squeal.c"
+#include "test_result.c"
 
 int main(int argc, char *argv[])
 {
@@ -45,6 +46,10 @@ int main(int argc, char *argv[])
     tcase_add_test(squeal_case, test_sql_where_init);
     tcase_add_test(squeal_case, test_sql_statement_init);
     suite_add_tcase(suite, squeal_case);
+
+    TCase *result_case = tcase_create("result");
+    tcase_add_test(result_case, test_sql_result_column_init);
+    suite_add_tcase(suite, result_case);
 
     /* test runner */
     SRunner *runner = srunner_create(suite);

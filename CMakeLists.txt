@@ -12,7 +12,7 @@ find_package(Threads REQUIRED)
 
 include_directories(include src/sql)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall -std=c99")
 
 set(SQUEAL_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/src/squeal.c
@@ -20,6 +20,8 @@ set(SQUEAL_SOURCE_FILES
         ${CMAKE_SOURCE_DIR}/src/squeal_threads.c
         ${CMAKE_SOURCE_DIR}/src/squeal_hashtable.c
         ${CMAKE_SOURCE_DIR}/src/squeal_function.c
+        ${CMAKE_SOURCE_DIR}/src/squeal_backend.c
+        ${CMAKE_SOURCE_DIR}/src/squeal_result.c
         ${CMAKE_SOURCE_DIR}/src/squeald.h)
 
 set(SQUEALD_SOURCE_FILES ${SQUEAL_SOURCE_FILES} src/squeald.c)

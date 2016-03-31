@@ -14,17 +14,29 @@ struct _squeal_column {
     SquealString *charset;
     uint16_t size;
     uint16_t type;
+    ResultColumn *next;
 };
 
 struct _squeal_row {
 
+    ResultRow *next;
 };
 
 struct _squeal_result {
     uint16_t column_count;
     uint32_t row_count;
+    ResultColumn *columns;
 
-    ResultRow *row[1]; /* struct hack. must be last field!! */
+    ResultRow *rows;
 };
+
+ResultColumn *sql_result_column_init();
+void sql_result_column_free(ResultColumn *column);
+
+ResultRow *sql_result_row_init();
+void sql_result_row_free(ResultRow *row);
+
+Result *sql_result_init();
+void sql_result_free(Result *result);
 
 #endif
