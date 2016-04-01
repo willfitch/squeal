@@ -49,6 +49,8 @@ int main(int argc, char *argv[])
 
     TCase *result_case = tcase_create("result");
     tcase_add_test(result_case, test_sql_result_column_init);
+    tcase_add_test(result_case, test_sql_result_row_init);
+    tcase_add_test(result_case, test_sql_result_init);
     suite_add_tcase(suite, result_case);
 
     /* test runner */

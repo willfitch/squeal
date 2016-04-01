@@ -68,6 +68,8 @@ ResultRow *sql_result_row_init()
         return NULL;
     }
 
+    row->next = NULL;
+
     return row;
 }
 
@@ -92,6 +94,9 @@ Result *sql_result_init()
     }
 
     result->columns = NULL;
+    result->rows = NULL;
+    result->row_count = 0;
+    result->column_count = 0;
     return result;
 }
 
