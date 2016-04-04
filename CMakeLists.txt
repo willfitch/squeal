@@ -36,7 +36,7 @@ add_executable(squeald ${SQUEALD_SOURCE_FILES})
 
 install(TARGETS squeald DESTINATION bin)
 install(FILES LICENSE.md DESTINATION .)
-install(FILES etc/squeal.ini.example DESTINATION etc/)
+install(FILES scripts/squeal.ini.example DESTINATION scripts/)
 install(DIRECTORY
         include/
         DESTINATION include
