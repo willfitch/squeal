@@ -56,6 +56,10 @@ int main(int argc, char *argv[])
 
     TCase *config_case = tcase_create("config");
     tcase_add_test(config_case, test_squeal_config_init);
+    tcase_add_test(config_case, test_squeal_config_find_entry);
+    tcase_add_test(config_case, test_S_CONFIG_STR);
+    tcase_add_test(config_case, test_S_CONFIG_INT);
+    tcase_add_test(config_case, test_S_CONFIG_BOOL);
     suite_add_tcase(suite, config_case);
 
     /* test runner */

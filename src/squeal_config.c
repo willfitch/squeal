@@ -30,6 +30,38 @@ SquealConfig *squeal_config_init(const char *file)
     return config;
 }
 
+ConfigEntry *squeal_config_find_entry(SquealConfig *config, const char *section, const char *key)
+{
+    ConfigEntry *entry = NULL;
+    ConfigSection *search_section = NULL;
+
+    if (config) {
+        search_section = config->root_section;
+
+        while (search_section != NULL) {
+            if (strcmp(search_section->name->val, section) == 0) {
+                break;
+            }
+
+            search_section = search_section->next;
+        }
+    }
+
+    if (search_section) {
+        entry = search_section->root;
+
+        while (entry != NULL) {
+            if (strcmp(entry->key->val, key) == 0) {
+                break;
+            }
+
+            entry = entry->next;
+        }
+    }
+
+    return entry;
+}
+
 static void load_ini(FILE *fp, SquealConfig **config)
 {
     SquealConfig *tmp = *config;
@@ -45,6 +77,8 @@ static void load_ini(FILE *fp, SquealConfig **config)
     ConfigEntry *prev_entry = NULL;
 
     while(fgets(buffer, buff_size, fp) != NULL) {
+        trim(buffer);
+
         if (buffer[0] == '[') { /* section */
             int i = 0, si = 0;
             char section_buff[buff_size];
@@ -106,14 +140,16 @@ static void load_ini(FILE *fp, SquealConfig **config)
 
             if (curr_entry->key != NULL) {
                 prev_entry = curr_entry;
-                curr_entry = (ConfigEntry *) malloc(sizeof(ConfigEntry));
+                curr_entry->next = (ConfigEntry *) malloc(sizeof(ConfigEntry));
 
-                if (curr_entry == NULL) {
+                if (curr_entry->next == NULL) {
                     fprintf(stderr, "load_ini: unable to allocate entry");
                     exit(EXIT_FAILURE);
                 }
 
-                config_entry_init(&curr_entry);
+                config_entry_init(&curr_entry->next);
+
+                curr_entry = curr_entry->next;
                 curr_entry->prev = prev_entry;
             }
 
@@ -142,7 +178,7 @@ static void load_ini(FILE *fp, SquealConfig **config)
 
             curr_entry->key = squeal_string_init(key_buff, strlen(key_buff) + 1);
             curr_entry->v.strval = squeal_string_init(val_buff, strlen(val_buff) + 1);
-        } else if (buffer[0] == '\r' || buffer[0] == '\n') { /* new lines */
+        } else if (buffer[0] == '\r' || buffer[0] == '\n' || buffer[0] == '\0') { /* new lines */
             continue;
         } else { /* invalid syntax */
             fprintf(stderr, "Invalid syntax in INI file");
