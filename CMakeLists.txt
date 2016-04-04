@@ -33,3 +33,10 @@ if (${ENABLE_TESTS})
 endif()
 
 add_executable(squeald ${SQUEALD_SOURCE_FILES})
+
+install(TARGETS squeald DESTINATION bin)
+install(FILES LICENSE.md DESTINATION .)
+install(DIRECTORY
+        include/
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h")
