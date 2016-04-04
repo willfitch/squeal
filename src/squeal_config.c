@@ -1,5 +1,4 @@
 #include <squeal.h>
-#include <squeal_config.h>
 #include <ctype.h>
 
 static void load_ini(FILE *fp, SquealConfig **config);
