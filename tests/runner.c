@@ -4,6 +4,7 @@
 #include "test_string.c"
 #include "test_squeal.c"
 #include "test_result.c"
+#include "test_config.c"
 
 int main(int argc, char *argv[])
 {
@@ -52,6 +53,10 @@ int main(int argc, char *argv[])
     tcase_add_test(result_case, test_sql_result_row_init);
     tcase_add_test(result_case, test_sql_result_init);
     suite_add_tcase(suite, result_case);
+
+    TCase *config_case = tcase_create("config");
+    tcase_add_test(config_case, test_squeal_config_init);
+    suite_add_tcase(suite, config_case);
 
     /* test runner */
     SRunner *runner = srunner_create(suite);

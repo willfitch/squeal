@@ -38,6 +38,9 @@ typedef struct _squeal_column ResultColumn;
 typedef struct _squeal_row ResultRow;
 typedef struct _squeal_result Result;
 typedef struct _squeal_backend Backend;
+typedef struct _squeal_ini_entry ConfigEntry;
+typedef struct _squeal_ini_section ConfigSection;
+typedef struct _squeal_ini SquealConfig;
 
 typedef enum {
     TYPE_DOUBLE,

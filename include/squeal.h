@@ -10,6 +10,7 @@
 #include <squeal_types.h>
 #include <squeal_sval.h>
 #include <squeal_string.h>
+#include <squeal_config.h>
 
 /* SELECT statement */
 Select *sql_select_init();
