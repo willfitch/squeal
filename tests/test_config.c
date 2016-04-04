@@ -1,6 +1,5 @@
 #include <squeal.h>
 #include <check.h>
-#include <unistd.h>
 
 START_TEST(test_squeal_config_init)
 {
