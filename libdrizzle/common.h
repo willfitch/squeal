@@ -18,6 +18,12 @@
 
 #include "config.h"
 
+#include <stdarg.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <netinet/tcp.h>
+#include <fcntl.h>
 #include "drizzle_client.h"
 #include "drizzle_server.h"
 

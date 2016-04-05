@@ -1,44 +1,7 @@
 #include "squeald.h"
-#include <squeal_hashtable.h>
 
-
-void task1() {
-    printf("Task1 executed\n");
-}
-
-
-void task2() {
-    printf("Task2 executed\n");
-}
 
 int main()
 {
     printf("Good to go\n");
-    HashTable *ht = squeal_ht_init();
-
-    /* Add 21 elements */
-    int i = 0;
-
-    for (; i < 32; i++) {
-        SquealString *key = squeal_string_alloc(sizeof("key-") + sizeof(int));
-        sprintf(key->val, "key-%d", i);
-        sval *val;
-        SVAL_INIT(val);
-        val->val.v.dval = 55.5;
-        squeal_ht_add_sval(&ht, key, val);
-    }
-
-    printf("total is %d\n", ht->ma.mask + 1);
-
-    /*Add 1 more element */
-    SquealString *next = squeal_string_init("work", sizeof("work"));
-    sval *nextval;
-    SVAL_INIT(nextval);
-
-    printf("here we go...\n");
-    squeal_ht_add_sval(&ht, next, nextval);
-
-    printf("total is %d\n", ht->ma.mask + 1);
-
-    squeal_ht_free(ht);
 }

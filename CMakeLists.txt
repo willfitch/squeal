@@ -10,7 +10,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 find_package(Threads REQUIRED)
 
-include_directories(include src/sql)
+include_directories(include src/sql ./)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall -std=c99")
 
@@ -27,6 +27,7 @@ set(SQUEAL_SOURCE_FILES
 
 set(SQUEALD_SOURCE_FILES ${SQUEAL_SOURCE_FILES} src/squeald.c)
 set_property(GLOBAL PROPERTY G_SQUEAL_SOURCE_FILES ${SQUEAL_SOURCE_FILES})
+add_subdirectory(libdrizzle)
 
 if (${ENABLE_TESTS})
     add_subdirectory(tests)
