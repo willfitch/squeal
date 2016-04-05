@@ -4,8 +4,34 @@
  * Copyright (C) 2008 Eric Day (eday@oddments.org)
  * All rights reserved.
  *
- * Use and distribution licensed under the BSD license.  See
- * the COPYING file in this directory for full text.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *     * The names of its contributors may not be used to endorse or
+ * promote products derived from this software without specific prior
+ * written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
 /**
@@ -37,7 +63,7 @@ extern "C" {
 /* Defines. */
 #define DRIZZLE_DEFAULT_TCP_HOST         "127.0.0.1"
 #define DRIZZLE_DEFAULT_TCP_PORT         4427
-#define DRIZZLE_DEFAULT_TCP_PORT_MYSQL   3306
+#define DRIZZLE_DEFAULT_TCP_PORT_MYSQL   4427
 #define DRIZZLE_DEFAULT_UDS              "/tmp/drizzle.sock"
 #define DRIZZLE_DEFAULT_UDS_MYSQL        "/tmp/mysql.sock"
 #define DRIZZLE_DEFAULT_BACKLOG          64
@@ -55,12 +81,14 @@ extern "C" {
 #define DRIZZLE_MAX_BUFFER_SIZE          32768
 #define DRIZZLE_BUFFER_COPY_THRESHOLD    8192
 #define DRIZZLE_MAX_SERVER_VERSION_SIZE  32
+#define DRIZZLE_MAX_SERVER_EXTRA_SIZE    32
 #define DRIZZLE_MAX_SCRAMBLE_SIZE        20
 #define DRIZZLE_STATE_STACK_SIZE         8
 #define DRIZZLE_ROW_GROW_SIZE            8192
 #define DRIZZLE_DEFAULT_SOCKET_TIMEOUT   10
 #define DRIZZLE_DEFAULT_SOCKET_SEND_SIZE 32768
 #define DRIZZLE_DEFAULT_SOCKET_RECV_SIZE 32768
+#define DRIZZLE_MYSQL_PASSWORD_HASH      41
 
 /**
  * Return codes.
@@ -130,16 +158,20 @@ typedef enum
  */
 typedef enum
 {
-  DRIZZLE_CON_NONE=           0,
-  DRIZZLE_CON_ALLOCATED=      (1 << 0),
-  DRIZZLE_CON_MYSQL=          (1 << 1),
-  DRIZZLE_CON_RAW_PACKET=     (1 << 2),
-  DRIZZLE_CON_RAW_SCRAMBLE=   (1 << 3),
-  DRIZZLE_CON_READY=          (1 << 4),
-  DRIZZLE_CON_NO_RESULT_READ= (1 << 5),
-  DRIZZLE_CON_IO_READY=       (1 << 6),
-  DRIZZLE_CON_LISTEN=         (1 << 7),
-  DRIZZLE_CON_EXPERIMENTAL=   (1 << 8)
+  DRIZZLE_CON_NONE=             0,
+  DRIZZLE_CON_ALLOCATED=        (1 << 0),
+  DRIZZLE_CON_MYSQL=            (1 << 1),
+  DRIZZLE_CON_RAW_PACKET=       (1 << 2),
+  DRIZZLE_CON_RAW_SCRAMBLE=     (1 << 3),
+  DRIZZLE_CON_READY=            (1 << 4),
+  DRIZZLE_CON_NO_RESULT_READ=   (1 << 5),
+  DRIZZLE_CON_IO_READY=         (1 << 6),
+  DRIZZLE_CON_LISTEN=           (1 << 7),
+  DRIZZLE_CON_EXPERIMENTAL=     (1 << 8),
+  DRIZZLE_CON_FOUND_ROWS=       (1 << 9),
+  DRIZZLE_CON_INTERACTIVE=      (1 << 11),
+  DRIZZLE_CON_MULTI_STATEMENTS= (1 << 12),
+  DRIZZLE_CON_AUTH_PLUGIN=      (1 << 13)
 } drizzle_con_options_t;
 
 /**
@@ -196,11 +228,15 @@ typedef enum
   DRIZZLE_CAPABILITIES_SECURE_CONNECTION=      (1 << 15),
   DRIZZLE_CAPABILITIES_MULTI_STATEMENTS=       (1 << 16),
   DRIZZLE_CAPABILITIES_MULTI_RESULTS=          (1 << 17),
+  DRIZZLE_CAPABILITIES_PS_MULTI_RESULTS=       (1 << 18),
+  DRIZZLE_CAPABILITIES_PLUGIN_AUTH=            (1 << 19),
   DRIZZLE_CAPABILITIES_SSL_VERIFY_SERVER_CERT= (1 << 30),
   DRIZZLE_CAPABILITIES_REMEMBER_OPTIONS=       (1 << 31),
   DRIZZLE_CAPABILITIES_CLIENT= (DRIZZLE_CAPABILITIES_LONG_PASSWORD |
+                                DRIZZLE_CAPABILITIES_FOUND_ROWS |
                                 DRIZZLE_CAPABILITIES_LONG_FLAG |
                                 DRIZZLE_CAPABILITIES_CONNECT_WITH_DB |
+                                DRIZZLE_CAPABILITIES_PLUGIN_AUTH |
                                 DRIZZLE_CAPABILITIES_TRANSACTIONS |
                                 DRIZZLE_CAPABILITIES_PROTOCOL_41 |
                                 DRIZZLE_CAPABILITIES_SECURE_CONNECTION)
@@ -258,6 +294,7 @@ typedef enum
   DRIZZLE_COMMAND_DRIZZLE_SHUTDOWN,
   DRIZZLE_COMMAND_DRIZZLE_CONNECT,
   DRIZZLE_COMMAND_DRIZZLE_PING,
+  DRIZZLE_COMMAND_DRIZZLE_KILL,
   DRIZZLE_COMMAND_DRIZZLE_END
 } drizzle_command_drizzle_t;
 
@@ -267,6 +304,7 @@ typedef enum
  */
 typedef enum
 {
+  DRIZZLE_QUERY_NONE,
   DRIZZLE_QUERY_ALLOCATED= (1 << 0)
 } drizzle_query_options_t;
 
@@ -359,7 +397,11 @@ typedef enum
   DRIZZLE_COLUMN_TYPE_DRIZZLE_NEWDECIMAL,
   DRIZZLE_COLUMN_TYPE_DRIZZLE_ENUM,
   DRIZZLE_COLUMN_TYPE_DRIZZLE_BLOB,
-  DRIZZLE_COLUMN_TYPE_DRIZZLE_MAX=DRIZZLE_COLUMN_TYPE_DRIZZLE_BLOB
+  DRIZZLE_COLUMN_TYPE_DRIZZLE_TIME,
+  DRIZZLE_COLUMN_TYPE_DRIZZLE_BOOLEAN,
+  DRIZZLE_COLUMN_TYPE_DRIZZLE_UUID,
+  DRIZZLE_COLUMN_TYPE_DRIZZLE_MICROTIME,
+  DRIZZLE_COLUMN_TYPE_DRIZZLE_MAX=DRIZZLE_COLUMN_TYPE_DRIZZLE_MICROTIME
 } drizzle_column_type_drizzle_t;
 
 /**

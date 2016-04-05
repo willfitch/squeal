@@ -4,8 +4,34 @@
  * Copyright (C) 2008 Eric Day (eday@oddments.org)
  * All rights reserved.
  *
- * Use and distribution licensed under the BSD license.  See
- * the COPYING file in this directory for full text.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *     * The names of its contributors may not be used to endorse or
+ * promote products derived from this software without specific prior
+ * written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
 /**
@@ -21,6 +47,13 @@
 
 uint64_t drizzle_row_read(drizzle_result_st *result, drizzle_return_t *ret_ptr)
 {
+  if ((result->column_current != result->column_count) && (!(result->options & DRIZZLE_RESULT_BUFFER_COLUMN)))
+  {
+    drizzle_set_error(result->con->drizzle, "drizzle_row_read", "cannot retrieve rows until all columns are retrieved");
+    *ret_ptr= DRIZZLE_RETURN_NOT_READY;
+    return 0;
+  }
+
   if (drizzle_state_none(result->con))
   {
     drizzle_state_push(result->con, drizzle_state_row_read);
@@ -67,7 +100,6 @@ drizzle_row_t drizzle_row_buffer(drizzle_result_st *result,
       {
         free(result->row);
         result->row= NULL;
-        free(result->field_sizes);
         result->field_sizes= NULL;
       }
 
@@ -159,14 +191,15 @@ drizzle_return_t drizzle_state_row_read(drizzle_con_st *con)
 {
   drizzle_log_debug(con->drizzle, "drizzle_state_row_read");
 
+  if (con->packet_size != 0 && con->buffer_size < con->packet_size && 
+    con->buffer_size < 5)
+  {
+    drizzle_state_push(con, drizzle_state_read);
+    return DRIZZLE_RETURN_OK;
+  }
+
   if (con->packet_size == 5 && con->buffer_ptr[0] == 254)
   {
-    if (con->buffer_size < 5)
-    {
-      drizzle_state_push(con, drizzle_state_read);
-      return DRIZZLE_RETURN_OK;
-    }
-
     /* Got EOF packet, no more rows. */
     con->result->row_current= 0;
     con->result->warning_count= drizzle_get_byte2(con->buffer_ptr + 1);

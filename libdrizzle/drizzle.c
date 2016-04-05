@@ -4,8 +4,34 @@
  * Copyright (C) 2008 Eric Day (eday@oddments.org)
  * All rights reserved.
  *
- * Use and distribution licensed under the BSD license.  See
- * the COPYING file in this directory for full text.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *     * The names of its contributors may not be used to endorse or
+ * promote products derived from this software without specific prior
+ * written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
 /**
@@ -13,7 +39,7 @@
  * @brief Drizzle Definitions
  */
 
-#include "common.h"
+#include "libdrizzle/common.h"
 
 /**
  * @addtogroup drizzle_static Static Drizzle Declarations
@@ -60,6 +86,19 @@ const char *drizzle_verbose_name(drizzle_verbose_t verbose)
 
 drizzle_st *drizzle_create(drizzle_st *drizzle)
 {
+#if defined(_WIN32)
+  /* if it is MS windows, invoke WSAStartup */
+  WSADATA wsaData;
+  if ( WSAStartup( MAKEWORD(2,2), &wsaData ) != 0 )
+    printf("Error at WSAStartup()\n");
+#else
+  struct sigaction act;
+  memset(&act, 0, sizeof(act));
+
+  act.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE, &act, NULL);
+#endif
+
   if (drizzle == NULL)
   {
     drizzle= malloc(sizeof(drizzle_st));
@@ -133,14 +172,17 @@ void drizzle_free(drizzle_st *drizzle)
   else if (drizzle->options & DRIZZLE_ASSERT_DANGLING)
   {
     assert(drizzle->con_list == NULL);
-    assert(drizzle->con_list == NULL);
+    assert(drizzle->query_list == NULL);
   }
 
-  if (drizzle->pfds != NULL)
-    free(drizzle->pfds);
+  free(drizzle->pfds);
 
   if (drizzle->options & DRIZZLE_ALLOCATED)
     free(drizzle);
+#if defined(_WIN32)
+  /* if it is MS windows, invoke WSACleanup() at the end*/
+  WSACleanup();
+#endif
 }
 
 const char *drizzle_error(const drizzle_st *drizzle)
@@ -383,7 +425,7 @@ drizzle_return_t drizzle_con_wait(drizzle_st *drizzle)
 
   if (drizzle->pfds_size < drizzle->con_count)
   {
-    pfds= realloc(drizzle->pfds, drizzle->con_count * sizeof(struct pollfd));
+    pfds= (struct pollfd *)realloc(drizzle->pfds, drizzle->con_count * sizeof(struct pollfd));
     if (pfds == NULL)
     {
       drizzle_set_error(drizzle, "drizzle_con_wait", "realloc");
@@ -589,7 +631,7 @@ drizzle_con_st *drizzle_con_accept(drizzle_st *drizzle, drizzle_con_st *con,
       con= drizzle_con_create(drizzle, con);
       if (con == NULL)
       {
-        (void)close(fd);
+        (void)closesocket(fd);
         *ret_ptr= DRIZZLE_RETURN_MEMORY;
         return NULL;
       }
@@ -597,7 +639,7 @@ drizzle_con_st *drizzle_con_accept(drizzle_st *drizzle, drizzle_con_st *con,
       *ret_ptr= drizzle_con_set_fd(con, fd);
       if (*ret_ptr != DRIZZLE_RETURN_OK)
       {
-        (void)close(fd);
+        (void)closesocket(fd);
         return NULL;
       }
 
@@ -634,6 +676,7 @@ void drizzle_set_error(drizzle_st *drizzle, const char *function,
                        const char *format, ...)
 {
   size_t size;
+  int written;
   char *ptr;
   char log_buffer[DRIZZLE_MAX_ERROR_SIZE];
   va_list args;
@@ -646,16 +689,17 @@ void drizzle_set_error(drizzle_st *drizzle, const char *function,
   ptr++;
 
   va_start(args, format);
-  size+= (size_t)vsnprintf(ptr, DRIZZLE_MAX_ERROR_SIZE - size, format, args);
+  written= vsnprintf(ptr, DRIZZLE_MAX_ERROR_SIZE - size, format, args);
   va_end(args);
 
-  if (drizzle->log_fn == NULL)
-  {
-    if (size >= DRIZZLE_MAX_ERROR_SIZE)
-      size= DRIZZLE_MAX_ERROR_SIZE - 1;
+  if (written < 0) size= DRIZZLE_MAX_ERROR_SIZE;
+  else size+= written;
+  if (size >= DRIZZLE_MAX_ERROR_SIZE)
+    size= DRIZZLE_MAX_ERROR_SIZE - 1;
+  log_buffer[size]= 0;
 
+  if (drizzle->log_fn == NULL)
     memcpy(drizzle->last_error, log_buffer, size + 1);
-  }
   else
     drizzle->log_fn(log_buffer, DRIZZLE_VERBOSE_ERROR, drizzle->log_context);
 }
@@ -674,6 +718,7 @@ void drizzle_log(drizzle_st *drizzle, drizzle_verbose_t verbose,
   else
   {
     vsnprintf(log_buffer, DRIZZLE_MAX_ERROR_SIZE, format, args);
+    log_buffer[DRIZZLE_MAX_ERROR_SIZE-1]= 0;
     drizzle->log_fn(log_buffer, verbose, drizzle->log_context);
   }
 }

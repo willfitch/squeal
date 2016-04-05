@@ -4,8 +4,34 @@
  * Copyright (C) 2008 Eric Day (eday@oddments.org)
  * All rights reserved.
  *
- * Use and distribution licensed under the BSD license.  See
- * the COPYING file in this directory for full text.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *     * The names of its contributors may not be used to endorse or
+ * promote products derived from this software without specific prior
+ * written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
 /**
@@ -322,39 +348,72 @@ drizzle_return_t drizzle_query_run_all(drizzle_st *drizzle)
   return DRIZZLE_RETURN_OK;
 }
 
-size_t drizzle_escape_string(char *to, const char *from, size_t from_size)
+ssize_t drizzle_safe_escape_string(char *to, size_t max_to_size, const char *from, size_t from_size)
 {
-  size_t to_size= 0;
+  ssize_t to_size= 0;
+  char newchar;
+  const char *end;
 
-  while (from_size > 0)
+  for (end= from + from_size; from < end; from++)
   {
+    newchar= 0;
     /* All multi-byte UTF8 characters have the high bit set for all bytes. */
     if (!(*from & 0x80))
     {
       switch (*from)
       {
       case 0:
+        newchar= '0';
+        break;
       case '\n':
+        newchar= 'n';
+        break;
       case '\r':
-      case '\\':
-      case '\'':
-      case '"':
+        newchar= 'r';
+        break;
       case '\032':
-        *to++= '\\';
-        to_size++;
+        newchar= 'Z';
+        break;
+      case '\\':
+        newchar= '\\';
+        break;
+      case '\'':
+        newchar= '\'';
+        break;
+      case '"':
+        newchar= '"';
+        break;
       default:
         break;
       }
     }
+    if (newchar != '\0')
+    {
+      if ((size_t)to_size + 2 > max_to_size)
+        return -1;
 
-    *to++= *from++;
-    from_size--;
+      *to++= '\\';
+      *to++= newchar;
+      to_size++;
+    }
+    else
+    {
+      if ((size_t)to_size + 1 > max_to_size)
+        return -1;
+
+      *to++= *from;
+    }
     to_size++;
   }
 
   *to= 0;
 
   return to_size;
+}
+
+size_t drizzle_escape_string(char *to, const char *from, size_t from_size)
+{
+  return (size_t) drizzle_safe_escape_string(to, (from_size * 2), from, from_size);
 }
 
 size_t drizzle_hex_string(char *to, const char *from, size_t from_size)
@@ -371,4 +430,21 @@ size_t drizzle_hex_string(char *to, const char *from, size_t from_size)
   *to= 0;
 
   return from_size * 2;
+}
+
+void drizzle_mysql_password_hash(char *to, const char *from, size_t from_size)
+{
+  SHA1_CTX ctx;
+  uint8_t hash_tmp1[SHA1_DIGEST_LENGTH];
+  uint8_t hash_tmp2[SHA1_DIGEST_LENGTH];
+
+  SHA1Init(&ctx);
+  SHA1Update(&ctx, (const uint8_t*)from, from_size);
+  SHA1Final(hash_tmp1, &ctx);
+
+  SHA1Init(&ctx);
+  SHA1Update(&ctx, hash_tmp1, SHA1_DIGEST_LENGTH);
+  SHA1Final(hash_tmp2, &ctx);
+
+  (void)drizzle_hex_string(to, (char*)hash_tmp2, SHA1_DIGEST_LENGTH);
 }

@@ -9,8 +9,10 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 find_package(Threads REQUIRED)
+find_package(Libevent2 REQUIRED)
 
-include_directories(include src/sql ./)
+include_directories(include src/sql ./ ${LIBEVENT2_INCLUDE_DIRS})
+add_subdirectory(libdrizzle)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall -std=c99")
 
@@ -27,17 +29,18 @@ set(SQUEAL_SOURCE_FILES
 
 set(SQUEALD_SOURCE_FILES ${SQUEAL_SOURCE_FILES} src/squeald.c)
 set_property(GLOBAL PROPERTY G_SQUEAL_SOURCE_FILES ${SQUEAL_SOURCE_FILES})
-add_subdirectory(libdrizzle)
 
 if (${ENABLE_TESTS})
     add_subdirectory(tests)
 endif()
 
 add_executable(squeald ${SQUEALD_SOURCE_FILES})
+target_link_libraries(squeald drizzle)
+target_link_libraries(squeald ${LIBEVENT2_LIBRARIES})
 
 install(TARGETS squeald DESTINATION bin)
 install(FILES LICENSE.md DESTINATION .)
-install(FILES scripts/squeal.ini.example DESTINATION scripts/)
+install(FILES scripts/squeal.ini DESTINATION scripts/)
 install(DIRECTORY
         include/
         DESTINATION include

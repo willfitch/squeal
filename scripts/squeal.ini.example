@@ -1,5 +1,0 @@
-[squeald]
-port = 3306
-
-[backend]
-extension=elasticsearch.so

@@ -5,8 +5,12 @@
 
 /*
  * SHA-1 in C
- * By Steve Reid <steve@edmweb.com>
- * 100% Public Domain
+ * 
+ * Copyright (C) 2010 nobody (this is public domain)
+ *
+ * This file is based on public domain code.
+ * Initial source code is in the public domain, 
+ * so clarified by Steve Reid <steve@edmweb.com>
  *
  * Test Vectors (from FIPS PUB 180-1)
  * "abc"
@@ -21,20 +25,11 @@
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 
-/* Solaris + gcc don't always define this. */
-#ifndef BYTE_ORDER
-# define LITTLE_ENDIAN 1234
-# define BIG_ENDIAN 4321
-# if defined(sparc) || defined(__sparc) || defined(__sparc__)
-#  define BYTE_ORDER BIG_ENDIAN
-# endif
-#endif /* BYTE_ORDER */
-
 /*
  * blk0() and blk() perform the initial expand.
  * I got the idea of expanding during the round function from SSLeay
  */
-#if BYTE_ORDER == LITTLE_ENDIAN
+#ifndef WORDS_BIGENDIAN
 # define blk0(i) (block->l[i] = (rol(block->l[i],24)&0xFF00FF00) \
     |(rol(block->l[i],8)&0x00FF00FF))
 #else

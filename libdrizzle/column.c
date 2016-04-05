@@ -4,9 +4,36 @@
  * Copyright (C) 2008 Eric Day (eday@oddments.org)
  * All rights reserved.
  *
- * Use and distribution licensed under the BSD license.  See
- * the COPYING file in this directory for full text.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *     * The names of its contributors may not be used to endorse or
+ * promote products derived from this software without specific prior
+ * written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
+
 
 /**
  * @file
@@ -38,7 +65,7 @@ static drizzle_column_type_t _column_type_drizzle_map_to[]=
 static drizzle_column_type_drizzle_t _column_type_drizzle_map_from[]=
 {
  DRIZZLE_COLUMN_TYPE_DRIZZLE_MAX, /* 0 */
- DRIZZLE_COLUMN_TYPE_DRIZZLE_TINY,
+ DRIZZLE_COLUMN_TYPE_DRIZZLE_BOOLEAN,
  DRIZZLE_COLUMN_TYPE_DRIZZLE_MAX,
  DRIZZLE_COLUMN_TYPE_DRIZZLE_LONG,
  DRIZZLE_COLUMN_TYPE_DRIZZLE_MAX,
@@ -337,11 +364,47 @@ drizzle_column_st *drizzle_column_create(drizzle_result_st *result,
       return NULL;
     }
 
-    memset(column, 0, sizeof(drizzle_column_st));
-    column->options|= DRIZZLE_COLUMN_ALLOCATED;
+    column->result = result;
+    /* SET BELOW: column->next */
+    column->prev = NULL;
+    column->options= DRIZZLE_COLUMN_ALLOCATED;
+    column->catalog[0] = '\0';
+    column->db[0] = '\0';
+    column->table[0] = '\0';
+    column->orig_table[0] = '\0';
+    column->name[0] = '\0';
+    column->orig_name[0] = '\0';
+    column->charset = 0;
+    column->size = 0;
+    column->max_size = 0;
+    column->type = 0;
+    column->flags = 0;
+    column->decimals = 0;
+    /* UNSET: column->default_value */
+    column->default_value_size = 0;
+
   }
   else
-    memset(column, 0, sizeof(drizzle_column_st));
+  {
+    column->result = result;
+    /* SET BELOW: column->next */
+    column->prev = NULL;
+    column->options= 0;
+    column->catalog[0] = '\0';
+    column->db[0] = '\0';
+    column->table[0] = '\0';
+    column->orig_table[0] = '\0';
+    column->name[0] = '\0';
+    column->orig_name[0] = '\0';
+    column->charset = 0;
+    column->size = 0;
+    column->max_size = 0;
+    column->type = 0;
+    column->flags = 0;
+    column->decimals = 0;
+    /* UNSET: column->default_value */
+    column->default_value_size = 0;
+  }
 
   column->result= result;
 
@@ -455,6 +518,7 @@ const uint8_t *drizzle_column_default_value(drizzle_column_st *column,
 
 drizzle_return_t drizzle_column_skip(drizzle_result_st *result)
 {
+  drizzle_return_t ret;
   if (drizzle_state_none(result->con))
   {
     result->options|= DRIZZLE_RESULT_SKIP_COLUMN;
@@ -462,8 +526,24 @@ drizzle_return_t drizzle_column_skip(drizzle_result_st *result)
     drizzle_state_push(result->con, drizzle_state_column_read);
     drizzle_state_push(result->con, drizzle_state_packet_read);
   }
+  ret= drizzle_state_loop(result->con);
+  result->options&= ~DRIZZLE_RESULT_SKIP_COLUMN;
+  return ret;
+}
 
-  return drizzle_state_loop(result->con);
+drizzle_return_t drizzle_column_skip_all(drizzle_result_st *result)
+{
+  drizzle_return_t ret;
+  uint16_t it;
+
+  for (it= 1; it <= result->column_count; it++)
+  {
+    ret= drizzle_column_skip(result);
+    if (ret != DRIZZLE_RETURN_OK)
+      return ret;
+  }
+
+  return DRIZZLE_RETURN_OK;
 }
 
 drizzle_column_st *drizzle_column_read(drizzle_result_st *result,
@@ -726,8 +806,9 @@ drizzle_return_t drizzle_state_column_read(drizzle_con_st *con)
     con->buffer_ptr+= con->packet_size;
     con->buffer_size-= con->packet_size;
     con->packet_size= 0;
+    con->result->column_current++;
 
-    drizzle_state_push(con, drizzle_state_packet_read);
+    drizzle_state_pop(con);
   }
   else
   {

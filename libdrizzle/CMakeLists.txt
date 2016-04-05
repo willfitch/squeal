@@ -1,45 +1,4 @@
 
-add_library(drizzle STATIC
-        column.c
-        column.h
-        column_client.h
-        column_server.h
-        command.c
-        command_client.h
-        command_server.h
-        common.h
-        conn.c
-        conn.h
-        conn_client.h
-        conn_local.h
-        conn_server.h
-        conn_uds.c
-        constants.h
-        drizzle.c
-        drizzle.h
-        drizzle_client.h
-        drizzle_local.h
-        drizzle_server.h
-        field.c
-        field_client.h
-        field_server.h
-        handshake.c
-        handshake_client.h
-        handshake_server.h
-        pack.c
-        pack.h
-        query.c
-        query.h
-        result.c
-        result.h
-        result_client.h
-        result_server.h
-        row.c
-        row_client.h
-        row_server.h
-        sha1.c
-        sha1.h
-        state.c
-        state.h
-        structs.h
-        visibility.h)
+file(GLOB SRC_FILES *.c *.h)
+add_library(drizzle STATIC ${SRC_FILES})
+install(TARGETS drizzle DESTINATION lib)

@@ -283,6 +283,17 @@
 # endif
 #endif
 
+#ifdef TARGET_OS_WINDOWS
+#define random() rand()
+#define srandom(a) srand(a)
+#define get_socket_errno() WSAGetLastError()
+#else
+#define INVALID_SOCKET -1
+#define SOCKET_ERROR -1
+#define closesocket(a) close(a)
+#define get_socket_errno() errno
+#endif
+
 /* Number of bits in a file offset, on hosts where this is settable. */
 /* #undef _FILE_OFFSET_BITS */
 

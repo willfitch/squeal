@@ -4,8 +4,34 @@
  * Copyright (C) 2008 Eric Day (eday@oddments.org)
  * All rights reserved.
  *
- * Use and distribution licensed under the BSD license.  See
- * the COPYING file in this directory for full text.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *     * The names of its contributors may not be used to endorse or
+ * promote products derived from this software without specific prior
+ * written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
 /**
@@ -80,8 +106,7 @@ void drizzle_result_free(drizzle_result_st *result)
   for (column= result->column_list; column != NULL; column= result->column_list)
     drizzle_column_free(column);
 
-  if (result->column_buffer != NULL)
-    free(result->column_buffer);
+  free(result->column_buffer);
 
   if (result->options & DRIZZLE_RESULT_BUFFER_ROW)
   {
@@ -92,13 +117,16 @@ void drizzle_result_free(drizzle_result_st *result)
     free(result->field_sizes_list);
   }
 
-  if (result->con->result_list == result)
-    result->con->result_list= result->next;
+  if (result->con)
+  {
+    result->con->result_count--;
+    if (result->con->result_list == result)
+      result->con->result_list= result->next;
+  }
   if (result->prev)
     result->prev->next= result->next;
   if (result->next)
     result->next->prev= result->prev;
-  result->con->result_count--;
 
   if (result->options & DRIZZLE_RESULT_ALLOCATED)
     free(result);
@@ -311,9 +339,9 @@ void drizzle_result_calc_row_size(drizzle_result_st *result,
   }
 }
 
-void drizzle_result_set_eof(drizzle_result_st *result, bool eof)
+void drizzle_result_set_eof(drizzle_result_st *result, bool is_eof)
 {
-  if (eof)
+  if (is_eof)
     result->options|= DRIZZLE_RESULT_EOF_PACKET;
   else
     result->options&= (drizzle_result_options_t)~DRIZZLE_RESULT_EOF_PACKET;
@@ -450,8 +478,10 @@ drizzle_return_t drizzle_state_result_read(drizzle_con_st *con)
   {
     snprintf(con->drizzle->last_error, DRIZZLE_MAX_ERROR_SIZE, "%.*s",
              (int32_t)con->packet_size, con->buffer_ptr);
+    con->drizzle->last_error[DRIZZLE_MAX_ERROR_SIZE-1]= 0;
     snprintf(con->result->info, DRIZZLE_MAX_INFO_SIZE, "%.*s",
              (int32_t)con->packet_size, con->buffer_ptr);
+    con->result->info[DRIZZLE_MAX_INFO_SIZE-1]= 0;
     con->buffer_ptr+= con->packet_size;
     con->buffer_size-= con->packet_size;
     con->packet_size= 0;
