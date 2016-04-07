@@ -11,6 +11,7 @@
 #include <squeal_sval.h>
 #include <squeal_string.h>
 #include <squeal_config.h>
+#include <squeal_stats.h>
 
 /* SELECT statement */
 Select *sql_select_init();
@@ -38,6 +39,5 @@ void sql_column_free(Column *column);
 /* WHERE clause */
 Where *sql_where_init();
 void sql_where_free(Where *where);
-
 
 #endif

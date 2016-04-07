@@ -7,25 +7,25 @@
 #include <squeal.h>
 #include <squeal_threads.h>
 
-static void         *start_routine(squeal_thread *thread);
-static void         squeal_thread_init(squeal_thread_pool *tp, squeal_thread thread, int id);
-static void         squeal_job_push(squeal_job_queue *queue, squeal_job *job);
-static int          squeal_job_queue_init(squeal_thread_pool *tp);
-static void         squeal_sem_init(squeal_sem *sem, unsigned int val);
-static squeal_job   *squeal_job_shift(squeal_job_queue *queue);
-static void         squeal_sem_reset(squeal_sem *sem);
-static void         squeal_sem_post(squeal_sem *sem);
-static void         squeal_sem_post_all(squeal_sem *sem);
-static void         squeal_job_queue_clear(squeal_job_queue *queue);
-static void         squeal_job_queue_destroy(squeal_job_queue *queue);
-static void         squeal_sem_wait(squeal_sem *sem);
+static void         *start_routine(SquealThread *thread);
+static void         squeal_thread_init(ThreadPool *tp, SquealThread thread, int id);
+static void         squeal_job_push(ThreadJobQueue *queue, ThreadJob *job);
+static int          squeal_job_queue_init(ThreadPool *tp);
+static void         squeal_sem_init(SquealSem *sem, unsigned int val);
+static ThreadJob   *squeal_job_shift(ThreadJobQueue *queue);
+static void         squeal_sem_reset(SquealSem *sem);
+static void         squeal_sem_post(SquealSem *sem);
+static void         squeal_sem_post_all(SquealSem *sem);
+static void         squeal_job_queue_clear(ThreadJobQueue *queue);
+static void         squeal_job_queue_destroy(ThreadJobQueue *queue);
+static void         squeal_sem_wait(SquealSem *sem);
 
-squeal_thread_pool *squeal_tp_init(unsigned int total_threads)
+ThreadPool *squeal_tp_init(unsigned int total_threads)
 {
-    squeal_thread_pool *tp;
+    ThreadPool *tp;
     int i;
 
-    tp = (squeal_thread_pool *) malloc(sizeof(squeal_thread_pool) + sizeof(squeal_thread) * total_threads);
+    tp = (ThreadPool *) malloc(sizeof(ThreadPool) + sizeof(SquealThread) * total_threads);
 
     /* can't allocate */
     if (tp == NULL) {
@@ -56,7 +56,7 @@ squeal_thread_pool *squeal_tp_init(unsigned int total_threads)
     return tp;
 }
 
-void squeal_tp_destroy(squeal_thread_pool *tp)
+void squeal_tp_destroy(ThreadPool *tp)
 {
     double timeout = 1.0;
     double tpassed = 0.0;
@@ -92,13 +92,13 @@ void squeal_tp_destroy(squeal_thread_pool *tp)
     free(tp);
 }
 
-static void squeal_job_queue_destroy(squeal_job_queue *queue)
+static void squeal_job_queue_destroy(ThreadJobQueue *queue)
 {
     squeal_job_queue_clear(queue);
     free(queue->has_jobs);
 }
 
-static void squeal_thread_init(squeal_thread_pool *tp, squeal_thread thread, int id)
+static void squeal_thread_init(ThreadPool *tp, SquealThread thread, int id)
 {
     thread.pool = tp;
     thread.id = id;
@@ -107,9 +107,9 @@ static void squeal_thread_init(squeal_thread_pool *tp, squeal_thread thread, int
     pthread_detach(thread.thread);
 }
 
-void *start_routine(squeal_thread *thread)
+void *start_routine(SquealThread *thread)
 {
-    squeal_thread_pool *tp = thread->pool;
+    ThreadPool *tp = thread->pool;
 
     pthread_mutex_lock(&tp->thread_count_lock);
     tp->total_threads_alive++;
@@ -133,7 +133,7 @@ void *start_routine(squeal_thread *thread)
             tp->total_threads_working++;
             pthread_mutex_unlock(&tp->thread_count_lock);
 
-            squeal_job *job;
+            ThreadJob *job;
             pthread_mutex_lock(&tp->job_queue->mutex);
             job = squeal_job_shift(tp->job_queue);
             pthread_mutex_unlock(&tp->job_queue->mutex);
@@ -161,13 +161,13 @@ void *start_routine(squeal_thread *thread)
     return NULL;
 }
 
-int squeal_tp_add_work(squeal_thread_pool *tp, void (*job_function)(void *), void *arg)
+int squeal_tp_add_work(ThreadPool *tp, void (*job_function)(void *), void *arg)
 {
-    squeal_job *job;
-    job = (squeal_job *) malloc(sizeof(squeal_job));
+    ThreadJob *job;
+    job = (ThreadJob *) malloc(sizeof(ThreadJob));
 
     if (job == NULL) {
-        fprintf(stderr, "Unable to allocate new squeal_job");
+        fprintf(stderr, "Unable to allocate new ThreadJob");
         return -1;
     }
 
@@ -181,7 +181,7 @@ int squeal_tp_add_work(squeal_thread_pool *tp, void (*job_function)(void *), voi
     return 0;
 }
 
-static void squeal_job_push(squeal_job_queue *queue, squeal_job *job)
+static void squeal_job_push(ThreadJobQueue *queue, ThreadJob *job)
 {
     job->previous = NULL;
 
@@ -197,9 +197,9 @@ static void squeal_job_push(squeal_job_queue *queue, squeal_job *job)
     squeal_sem_post(queue->has_jobs);
 }
 
-static int squeal_job_queue_init(squeal_thread_pool *tp)
+static int squeal_job_queue_init(ThreadPool *tp)
 {
-    tp->job_queue = (squeal_job_queue *) malloc(sizeof(squeal_job_queue));
+    tp->job_queue = (ThreadJobQueue *) malloc(sizeof(ThreadJobQueue));
 
     if (tp->job_queue == NULL) {
         fprintf(stderr, "Unable to allocate job_queue");
@@ -210,7 +210,7 @@ static int squeal_job_queue_init(squeal_thread_pool *tp)
     tp->job_queue->front = NULL;
     tp->job_queue->rear = NULL;
 
-    tp->job_queue->has_jobs = (squeal_sem *) malloc(sizeof(squeal_sem));
+    tp->job_queue->has_jobs = (SquealSem *) malloc(sizeof(SquealSem));
 
     if (tp->job_queue->has_jobs == NULL) {
         fprintf(stderr, "Unable to allocate has_jobs");
@@ -223,7 +223,7 @@ static int squeal_job_queue_init(squeal_thread_pool *tp)
     return 0;
 }
 
-static void squeal_job_queue_clear(squeal_job_queue *queue)
+static void squeal_job_queue_clear(ThreadJobQueue *queue)
 {
     while (queue->len) {
         free(squeal_job_shift(queue));
@@ -235,9 +235,9 @@ static void squeal_job_queue_clear(squeal_job_queue *queue)
     queue->len = 0;
 }
 
-static squeal_job *squeal_job_shift(squeal_job_queue *queue)
+static ThreadJob *squeal_job_shift(ThreadJobQueue *queue)
 {
-    squeal_job *job;
+    ThreadJob *job;
     job = queue->front;
 
     if (queue->len == 1) {
@@ -253,7 +253,7 @@ static squeal_job *squeal_job_shift(squeal_job_queue *queue)
     return job;
 }
 
-void squeal_tp_wait(squeal_thread_pool *tp)
+void squeal_tp_wait(ThreadPool *tp)
 {
     pthread_mutex_lock(&tp->thread_count_lock);
 
@@ -264,14 +264,14 @@ void squeal_tp_wait(squeal_thread_pool *tp)
     pthread_mutex_unlock(&tp->thread_count_lock);
 }
 
-void squeal_tp_pause(squeal_thread_pool *tp)
+void squeal_tp_pause(ThreadPool *tp)
 {
     pthread_mutex_lock(&tp->threads_paused_lock);
     tp->paused = 1;
     pthread_mutex_unlock(&tp->threads_paused_lock);
 }
 
-void squeal_tp_resume(squeal_thread_pool *tp)
+void squeal_tp_resume(ThreadPool *tp)
 {
     pthread_mutex_lock(&tp->threads_paused_lock);
     tp->paused = 0;
@@ -279,7 +279,7 @@ void squeal_tp_resume(squeal_thread_pool *tp)
     pthread_mutex_unlock(&tp->threads_paused_lock);
 }
 
-static void squeal_sem_init(squeal_sem *sem, unsigned int val)
+static void squeal_sem_init(SquealSem *sem, unsigned int val)
 {
     assert(val < 2);
 
@@ -288,12 +288,12 @@ static void squeal_sem_init(squeal_sem *sem, unsigned int val)
     sem->val = val;
 }
 
-static void squeal_sem_reset(squeal_sem *sem)
+static void squeal_sem_reset(SquealSem *sem)
 {
     squeal_sem_init(sem, 0);
 }
 
-static void squeal_sem_post(squeal_sem *sem)
+static void squeal_sem_post(SquealSem *sem)
 {
     pthread_mutex_lock(&sem->mutex);
     sem->val = 1;
@@ -301,7 +301,7 @@ static void squeal_sem_post(squeal_sem *sem)
     pthread_mutex_unlock(&sem->mutex);
 }
 
-static void squeal_sem_post_all(squeal_sem *sem)
+static void squeal_sem_post_all(SquealSem *sem)
 {
     pthread_mutex_lock(&sem->mutex);
     sem->val = 1;
@@ -309,7 +309,7 @@ static void squeal_sem_post_all(squeal_sem *sem)
     pthread_mutex_unlock(&sem->mutex);
 }
 
-static void squeal_sem_wait(squeal_sem *sem)
+static void squeal_sem_wait(SquealSem *sem)
 {
     pthread_mutex_lock(&sem->mutex);
 

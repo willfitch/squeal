@@ -19,6 +19,12 @@ struct _squeal_backend {
     SquealString *external_name;
 
     SquealQueryHandler *query_handler;
+
+    struct {
+        pthread_mutex_t lock;
+        volatile uint64_t total_queries;
+        volatile uint64_t errors;
+    } stats;
 };
 
 void squeal_register_backend(Backend *backend);

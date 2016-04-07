@@ -3,16 +3,16 @@
 
 #include <pthread.h>
 
-typedef struct _squeal_job_queue_status squeal_sem;
-typedef struct _squeal_thread squeal_thread;
-typedef struct _squeal_job squeal_job;
-typedef struct _squeal_job_queue squeal_job_queue;
-typedef struct _squeal_thread_pool squeal_thread_pool;
+typedef struct _squeal_job_queue_status SquealSem;
+typedef struct _squeal_thread SquealThread;
+typedef struct _squeal_job ThreadJob;
+typedef struct _squeal_job_queue ThreadJobQueue;
+typedef struct _squeal_thread_pool ThreadPool;
 
 struct _squeal_thread {
     int id;
     pthread_t thread;
-    squeal_thread_pool *pool;
+    ThreadPool *pool;
 };
 
 struct _squeal_job_queue_status {
@@ -22,7 +22,7 @@ struct _squeal_job_queue_status {
 };
 
 struct _squeal_job {
-    squeal_job *previous;
+    ThreadJob *previous;
     void (*job_function)(void *arg);
     void *arg;
 };
@@ -30,9 +30,9 @@ struct _squeal_job {
 struct _squeal_job_queue {
     unsigned int len;
     pthread_mutex_t mutex;
-    squeal_job *front;
-    squeal_job *rear;
-    squeal_sem *has_jobs;
+    ThreadJob *front;
+    ThreadJob *rear;
+    SquealSem *has_jobs;
 };
 
 struct _squeal_thread_pool{
@@ -49,17 +49,17 @@ struct _squeal_thread_pool{
     pthread_mutex_t thread_count_lock;
     pthread_cond_t threads_idle;
 
-    squeal_job_queue *job_queue;
+    ThreadJobQueue *job_queue;
 
     /* must be the last element! */
-    squeal_thread threads[1];
+    SquealThread threads[1];
 };
 
-squeal_thread_pool *squeal_tp_init(unsigned int total_threads);
-int squeal_tp_add_work(squeal_thread_pool *tp, void (*job_function)(void *), void *arg);
-void squeal_tp_pause(squeal_thread_pool *tp);
-void squeal_tp_resume(squeal_thread_pool *tp);
-void squeal_tp_destroy(squeal_thread_pool *tp);
-void squeal_tp_wait(squeal_thread_pool *tp);
+ThreadPool *squeal_tp_init(unsigned int total_threads);
+int squeal_tp_add_work(ThreadPool *tp, void (*job_function)(void *), void *arg);
+void squeal_tp_pause(ThreadPool *tp);
+void squeal_tp_resume(ThreadPool *tp);
+void squeal_tp_destroy(ThreadPool *tp);
+void squeal_tp_wait(ThreadPool *tp);
 
 #endif

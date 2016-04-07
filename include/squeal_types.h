@@ -41,6 +41,7 @@ typedef struct _squeal_backend Backend;
 typedef struct _squeal_ini_entry ConfigEntry;
 typedef struct _squeal_ini_section ConfigSection;
 typedef struct _squeal_ini SquealConfig;
+typedef struct _squeal_stats SquealStats;
 
 typedef enum {
     TYPE_DOUBLE,
@@ -72,7 +73,9 @@ typedef enum {
 
 
 typedef struct {
-    unsigned short port; /* max 65,535 */
+    unsigned int port; /* max 65,535 */
+    unsigned int io_thread_count;
+    unsigned int max_connections;
     SquealString *address;
 } ServerInfo;
 
@@ -143,7 +146,7 @@ struct _select_statement {
     GroupBy *group;
     uint32_t limit;
     uint32_t offset;
-    Column *columns; /* struct hack. must be last! */
+    Column *columns;
 };
 
 struct _sql_statement {
@@ -161,6 +164,11 @@ struct _sql_statement {
  */
 typedef struct {
     uint64_t connection_id;
+
+    int fd; /* file descriptor */
+    struct event_base *ev_base; /* The event_base for this client. */
+    struct bufferevent *buff_event; /* The bufferedevent for this client. */
+    struct evbuffer *output_buffer; /* The output buffer for this client. */
 } Client;
 
 typedef struct {

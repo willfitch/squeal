@@ -26,6 +26,10 @@ void squeal_register_backend(Backend *backend)
         backend->external_name = backend->internal_name;
     }
 
+    backend->stats.errors = 0;
+    backend->stats.total_queries = 0;
+    pthread_mutex_init(&backend->stats.lock, NULL);
+
     pthread_mutex_lock(&bm.wlock);
     squeal_ht_add_ptr(&bm.backends, backend->internal_name, (void *) backend);
     pthread_mutex_unlock(&bm.wlock);
