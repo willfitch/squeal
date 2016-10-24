@@ -63,6 +63,8 @@ ConfigEntry *squeal_config_find_entry(SquealConfig *config, const char *section,
 
 static void load_ini(FILE *fp, SquealConfig **config)
 {
+    LOG_ERROR("well, this isn't good, %s", "Will");
+    LOG_TRACEV("hey, dude");
     SquealConfig *tmp = *config;
     int buff_size = 1024;
     char buffer[buff_size];

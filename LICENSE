@@ -1,0 +1,11 @@
+SQueaL License 1.0
+
+-   Do with this software as you wish.  Make money, link to your executable, fork and hack your own version, etc.
+
+-   I don't need credit. No need to provide a copy of SQueaL's license. However, the current version of 
+    SQueaL does use libdrizzle, distributed under GPLv2 (shameful), so you will need to adhere to that portion 
+    the software based on that license for the time being.  Use of this library isn't a permenant solution, and
+    once this project is stable, it's removal is the highest priority.
+    
+-   While not a requirement, I'd appreciate giving back to this project. If you enhance/extend functionality
+    that may be used by others, consider contributing your work upstream.

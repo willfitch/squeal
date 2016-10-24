@@ -20,6 +20,7 @@ int main()
 #include <stdlib.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <signal.h>
 
 #include <event2/event.h>
 #include <event2/buffer.h>
@@ -27,8 +28,6 @@ int main()
 #include <libdrizzle/drizzle_server.h>
 #include <squeal.h>
 #include <squeal_threads.h>
-#include <squeal_stats.h>
-#include <squeal_types.h>
 
 #define MAX_LINE 16384
 #define DEFAULT_MAX_CONNECTIONS 200
@@ -52,6 +51,7 @@ void do_read(evutil_socket_t fd, short events, void *arg);
 void do_write(evutil_socket_t fd, short events, void *arg);
 static void initialize_server(SquealConfig *config);
 static squeal_always_inline int inc_and_check_connections();
+void sig_callback(int signal);
 
 char rot13_char(char c)
 {
@@ -75,8 +75,8 @@ void readcb(struct bufferevent *bev, void *ctx)
     output = bufferevent_get_output(bev);
 
     while ((line = evbuffer_readln(input, &n, EVBUFFER_EOL_LF))) {
-        for (i = 0; i < n; ++i)
-            line[i] = rot13_char(line[i]);
+        /*for (i = 0; i < n; ++i)
+            line[i] = rot13_char(line[i]);*/
         evbuffer_add(output, line, n);
         evbuffer_add(output, "\n", 1);
         free(line);
@@ -86,14 +86,20 @@ void readcb(struct bufferevent *bev, void *ctx)
         /* Too long; just process what there is and go on so that the buffer
          * doesn't grow infinitely long. */
         char buf[1024];
+
         while (evbuffer_get_length(input)) {
-            int n = evbuffer_remove(input, buf, sizeof(buf));
+            n = evbuffer_remove(input, buf, sizeof(buf));
+
             for (i = 0; i < n; ++i)
                 buf[i] = rot13_char(buf[i]);
+
             evbuffer_add(output, buf, n);
         }
+
         evbuffer_add(output, "\n", 1);
     }
+
+    evbuffer_add(output, "whats up\n", 9);
 }
 
 void errorcb(struct bufferevent *bev, short error, void *ctx)
@@ -113,9 +119,12 @@ void errorcb(struct bufferevent *bev, short error, void *ctx)
 
 void on_accept(evutil_socket_t listener, short event, void *arg)
 {
+
     /* if we've hit max connections, refuse the connection */
     if (!inc_and_check_connections()) {
         /* @todo: refuse the connection */
+        close(listener);
+        return;
     }
 
     struct event_base *base = arg;
@@ -203,6 +212,44 @@ static void initialize_server(SquealConfig *config)
     server->stats.threads_alive = &server->pool->total_threads_alive;
     server->stats.threads_working = &server->pool->total_threads_working;
     server->stats.start_time = (unsigned) time(NULL);
+
+
+    sigset_t sigset;
+    sigemptyset(&sigset);
+    struct sigaction siginfo = {
+            .sa_handler = sig_callback,
+            .sa_mask = sigset,
+            .sa_flags = SA_RESTART,
+    };
+
+    sigaction(SIGINT, &siginfo, NULL);
+    sigaction(SIGTERM, &siginfo, NULL);
+
+}
+
+static void kill_squeal()
+{
+    LOG_TRACE("Releasing networking");
+
+    /*if (event_base_loopexit(evbase_accept, NULL)) {
+        perror("Error shutting down server");
+    }*/
+
+    LOG_TRACE("Shutting down IO threads");
+    squeal_tp_destroy(server->pool);
+
+    LOG_TRACE("Freeing all resources");
+    squeal_config_free(server->config);
+
+    LOG_CRIT("Shutting down Squeal");
+    log_release();
+}
+
+void sig_callback(int signal)
+{
+    fprintf(stdout, "Shutting down SQueaL due to signal %d: %s\n", signal, strsignal(signal));
+    kill_squeal();
+    exit(signal);
 }
 
 int main(int argc, char *argv[])
@@ -211,8 +258,10 @@ int main(int argc, char *argv[])
     struct sockaddr_in sin;
     struct event_base *base;
     struct event *listener_event;
+    log_init(L_TRACEV, "./poopymonster.txt");
     SquealConfig *config = squeal_config_init(INI_FILE);
 
+    LOG_WARN("Unable to poop");
     initialize_server(config);
 
     base = event_base_new();
@@ -239,7 +288,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    if (listen(listener, 16)<0) {
+    if (listen(listener, server->server_info.max_connections ) < 0) {
         perror("listen");
         return EXIT_FAILURE;
     }
