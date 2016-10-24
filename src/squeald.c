@@ -53,30 +53,15 @@ static void initialize_server(SquealConfig *config);
 static squeal_always_inline int inc_and_check_connections();
 void sig_callback(int signal);
 
-char rot13_char(char c)
-{
-    /* We don't want to use isalpha here; setting the locale would change
-     * which characters are considered alphabetical. */
-    if ((c >= 'a' && c <= 'm') || (c >= 'A' && c <= 'M'))
-        return c + 13;
-    else if ((c >= 'n' && c <= 'z') || (c >= 'N' && c <= 'Z'))
-        return c - 13;
-    else
-        return c;
-}
-
 void readcb(struct bufferevent *bev, void *ctx)
 {
     struct evbuffer *input, *output;
     char *line;
     size_t n;
-    int i;
     input = bufferevent_get_input(bev);
     output = bufferevent_get_output(bev);
 
     while ((line = evbuffer_readln(input, &n, EVBUFFER_EOL_LF))) {
-        /*for (i = 0; i < n; ++i)
-            line[i] = rot13_char(line[i]);*/
         evbuffer_add(output, line, n);
         evbuffer_add(output, "\n", 1);
         free(line);
@@ -89,10 +74,6 @@ void readcb(struct bufferevent *bev, void *ctx)
 
         while (evbuffer_get_length(input)) {
             n = evbuffer_remove(input, buf, sizeof(buf));
-
-            for (i = 0; i < n; ++i)
-                buf[i] = rot13_char(buf[i]);
-
             evbuffer_add(output, buf, n);
         }
 
@@ -224,7 +205,6 @@ static void initialize_server(SquealConfig *config)
 
     sigaction(SIGINT, &siginfo, NULL);
     sigaction(SIGTERM, &siginfo, NULL);
-
 }
 
 static void kill_squeal()
